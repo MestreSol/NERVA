@@ -1,7 +1,7 @@
-﻿using NERVA.Domain.Common;
-using NERVA.Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
 
-namespace NERVA.Domain.Entities.Employee
+namespace Domain.Entities.Employee
 {
     public class Employee : BaseAuditableEntity
     {

@@ -1,4 +1,4 @@
-﻿namespace NERVA.Domain.Common
+﻿namespace Domain.Common
 {
     public class Localization : BaseAuditableEntity
     {

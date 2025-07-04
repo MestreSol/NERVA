@@ -1,8 +1,8 @@
 ﻿
-using NERVA.Domain.Common;
-using NERVA.Domain.Entities.Approval;
+using Domain.Common;
+using Domain.Entities.Approval;
 
-namespace NERVA.Domain.Entities.Approval
+namespace Domain.Entities.Approval
 {
     public class ApprovalAction : BaseAuditableEntity
     {

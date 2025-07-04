@@ -1,6 +1,6 @@
-﻿using NERVA.Domain.Common;
+﻿using Domain.Common;
 
-namespace NERVA.Domain.Entities.Employee
+namespace Domain.Entities.Employee
 {
     public class ContractUpdate : BaseAuditableEntity
     {

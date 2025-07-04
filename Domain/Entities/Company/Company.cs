@@ -1,6 +1,6 @@
-﻿using NERVA.Domain.Common;
+﻿using Domain.Common;
 
-namespace NERVA.Domain.Entities.Company
+namespace Domain.Entities.Company
 {
     public class Company : BaseAuditableEntity
     {

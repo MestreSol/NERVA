@@ -1,7 +1,7 @@
-﻿using NERVA.Domain.Common;
-using NERVA.Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
 
-namespace NERVA.Domain.Entities.Company
+namespace Domain.Entities.Company
 {
     public class Operation : BaseAuditableEntity
     {
@@ -12,6 +12,6 @@ namespace NERVA.Domain.Entities.Company
         public Guid CompanyId { get; set; }
         public Company Company { get; set; } = null!;
         public OperationType Type { get; set; } = OperationType.Unknown;
-        public Localization Localization
+        public Localization Localization;
     }
 }

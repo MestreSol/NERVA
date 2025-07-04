@@ -1,7 +1,7 @@
 ﻿using Domain.Enums;
-using NERVA.Domain.Common;
+using Domain.Common;
 
-namespace NERVA.Domain.Entities.Approval
+namespace Domain.Entities.Approval
 {
     public class ApprovalRequest : BaseAuditableEntity
     {
