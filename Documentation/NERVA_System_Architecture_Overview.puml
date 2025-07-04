@@ -1,0 +1,120 @@
+@startuml NERVA_System_Architecture_Overview
+!define NERVA_SYSTEM_OVERVIEW
+
+title NERVA - Visão Geral da Arquitetura do Sistema
+
+' ===== SYSTEM MODULES =====
+package "Core Module" {
+    class Employee {
+        + EmployeeNumber : string
+        + FirstName : string
+        + LastName : string
+        + Status : EmployeeStatus
+    }
+    
+    class Department {
+        + Name : string
+        + Budget : decimal
+    }
+    
+    class Position {
+        + Title : string
+        + MinSalary : decimal
+        + MaxSalary : decimal
+    }
+}
+
+package "Access Control Module" {
+    class AccessRole {
+        + Name : string
+        + Description : string
+    }
+    
+    class Permission {
+        + Resource : string
+        + Action : string
+    }
+    
+    class AccessLog {
+        + Resource : string
+        + Success : bool
+        + AccessDate : DateTime
+    }
+}
+
+package "Approval Workflow Module" {
+    class ApprovalWorkflow {
+        + Name : string
+        + EntityType : string
+    }
+    
+    class ApprovalRequest {
+        + RequestReason : string
+        + Status : ApprovalStatus
+    }
+    
+    class ApprovalAction {
+        + Decision : ApprovalDecision
+        + Comments : string
+    }
+}
+
+package "Logistics Module" {
+    class Product {
+        + Name : string
+        + Price : decimal
+    }
+    
+    class Warehouse {
+        + Name : string
+        + Location : string
+    }
+    
+    class PurchaseOrder {
+        + OrderNumber : string
+        + TotalAmount : decimal
+    }
+    
+    class Inventory {
+        + Quantity : int
+        + MinimumStock : int
+    }
+}
+
+package "Workplace Movement Module" {
+    class WorkPlace {
+        + Code : string
+        + Name : string
+        + MaxCapacity : int
+        + Type : WorkPlaceType
+    }
+    
+    class WorkPlaceMovementRequest {
+        + RequestReason : string
+        + Status : WorkPlaceMovementStatus
+        + MovementType : WorkPlaceMovementType
+    }
+    
+    class WorkPlaceAssignment {
+        + StartDate : DateTime
+        + EndDate : DateTime
+        + IsActive : bool
+    }
+}
+
+' ===== MODULE RELATIONSHIPS =====
+Employee ||--o{ AccessRole : "has roles"
+Employee ||--o{ ApprovalRequest : "requests"
+Employee ||--o{ PurchaseOrder : "creates"
+Employee ||--o{ WorkPlaceAssignment : "assigned to"
+ApprovalWorkflow ||--o{ ApprovalRequest : "processes"
+WorkPlace ||--o{ WorkPlaceMovementRequest : "target of"
+Warehouse ||--o{ Product : "stores"
+
+' ===== CROSS-MODULE INTEGRATIONS =====
+WorkPlaceMovementRequest ..> ApprovalRequest : "requires approval"
+PurchaseOrder ..> ApprovalRequest : "requires approval"
+AccessLog ..> Employee : "tracks access"
+WorkPlace ..> Department : "belongs to"
+
+@enduml

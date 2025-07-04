@@ -1,0 +1,334 @@
+@startuml NERVA_Visitor_Management_Module
+!theme plain
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+
+title NERVA - Módulo de Gestão de Visitantes
+
+package "Visitor Management" as VisitorManagement {
+    
+    class Visitor {
+        + VisitorId : int <<get>> <<set>>
+        + FirstName : string <<get>> <<set>>
+        + LastName : string <<get>> <<set>>
+        + Email : string <<get>> <<set>>
+        + Phone : string <<get>> <<set>>
+        + DocumentType : string <<get>> <<set>>
+        + DocumentNumber : string <<get>> <<set>>
+        + Company : string? <<get>> <<set>>
+        + Position : string? <<get>> <<set>>
+        + Photo : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + IsBlacklisted : bool <<get>> <<set>>
+        + BlacklistReason : string? <<get>> <<set>>
+        + GetFullName() : string
+        + GetVisitHistory() : List<VisitorAccess>
+        + GetActiveVisits() : List<VisitorAccess>
+        + GetPreRegistrations() : List<VisitorPreRegistration>
+    }
+    
+    class VisitorPreRegistration {
+        + PreRegistrationId : int <<get>> <<set>>
+        + VisitorId : int <<get>> <<set>>
+        + RequestedById : int <<get>> <<set>>
+        + HostEmployeeId : int <<get>> <<set>>
+        + VisitPurpose : string <<get>> <<set>>
+        + VisitDate : DateTime <<get>> <<set>>
+        + ExpectedArrivalTime : TimeSpan <<get>> <<set>>
+        + ExpectedDepartureTime : TimeSpan <<get>> <<set>>
+        + AccessAreaIds : string <<get>> <<set>>
+        + SpecialRequirements : string? <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + QRCode : string <<get>> <<set>>
+        + AccessToken : string <<get>> <<set>>
+        + TokenExpiryDate : DateTime <<get>> <<set>>
+        + IsApproved : bool <<get>> <<set>>
+        + ApprovedById : int? <<get>> <<set>>
+        + ApprovalDate : DateTime? <<get>> <<set>>
+        + GetVisitor() : Visitor
+        + GetRequestedBy() : Employee
+        + GetHostEmployee() : Employee
+        + GetApprovedBy() : Employee?
+        + GetAccessAreas() : List<AccessArea>
+        + GetVisitorAccess() : VisitorAccess?
+        + GenerateQRCode() : string
+        + GenerateAccessToken() : string
+        + ValidateToken() : bool
+    }
+    
+    class VisitorAccess {
+        + AccessId : int <<get>> <<set>>
+        + VisitorId : int <<get>> <<set>>
+        + PreRegistrationId : int? <<get>> <<set>>
+        + HostEmployeeId : int <<get>> <<set>>
+        + CheckInTime : DateTime <<get>> <<set>>
+        + CheckOutTime : DateTime? <<get>> <<set>>
+        + ActualPurpose : string <<get>> <<set>>
+        + BadgeNumber : string? <<get>> <<set>>
+        + EscortRequired : bool <<get>> <<set>>
+        + EscortEmployeeId : int? <<get>> <<set>>
+        + CheckInLocationId : int <<get>> <<set>>
+        + CheckOutLocationId : int? <<get>> <<set>>
+        + VehiclePlate : string? <<get>> <<set>>
+        + VehicleModel : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetVisitor() : Visitor
+        + GetPreRegistration() : VisitorPreRegistration?
+        + GetHostEmployee() : Employee
+        + GetEscortEmployee() : Employee?
+        + GetCheckInLocation() : AccessArea
+        + GetCheckOutLocation() : AccessArea?
+        + GetAccessLogs() : List<VisitorAccessLog>
+        + GetDuration() : TimeSpan?
+        + IsOverdue() : bool
+        + PerformCheckOut() : void
+    }
+    
+    class VisitorAccessLog {
+        + LogId : int <<get>> <<set>>
+        + VisitorAccessId : int <<get>> <<set>>
+        + AccessAreaId : int <<get>> <<set>>
+        + AccessTime : DateTime <<get>> <<set>>
+        + AccessType : string <<get>> <<set>>
+        + DeviceId : string? <<get>> <<set>>
+        + IpAddress : string? <<get>> <<set>>
+        + Success : bool <<get>> <<set>>
+        + FailureReason : string? <<get>> <<set>>
+        + GetVisitorAccess() : VisitorAccess
+        + GetAccessArea() : AccessArea
+    }
+    
+    class AccessArea {
+        + AreaId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + AreaType : string <<get>> <<set>>
+        + Building : string <<get>> <<set>>
+        + Floor : string? <<get>> <<set>>
+        + SecurityLevel : int <<get>> <<set>>
+        + RequiresEscort : bool <<get>> <<set>>
+        + MaxCapacity : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetAccessRules() : List<VisitorAccessRule>
+        + GetVisitorAccess() : List<VisitorAccess>
+        + GetAccessLogs() : List<VisitorAccessLog>
+        + GetCurrentVisitors() : List<VisitorAccess>
+        + GetAvailableCapacity() : int
+    }
+    
+    class VisitorAccessRule {
+        + RuleId : int <<get>> <<set>>
+        + AccessAreaId : int <<get>> <<set>>
+        + RuleName : string <<get>> <<set>>
+        + RuleType : string <<get>> <<set>>
+        + RuleValue : string <<get>> <<set>>
+        + AllowedStartTime : TimeSpan? <<get>> <<set>>
+        + AllowedEndTime : TimeSpan? <<get>> <<set>>
+        + AllowedDaysOfWeek : string? <<get>> <<set>>
+        + RequiredApprovalLevel : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetAccessArea() : AccessArea
+        + ValidateAccess(visitor:Visitor, accessTime:DateTime) : bool
+        + GetRequiredApprover() : Employee?
+    }
+    
+    class VisitorNotification {
+        + NotificationId : int <<get>> <<set>>
+        + VisitorId : int <<get>> <<set>>
+        + PreRegistrationId : int? <<get>> <<set>>
+        + VisitorAccessId : int? <<get>> <<set>>
+        + NotificationType : string <<get>> <<set>>
+        + Recipient : string <<get>> <<set>>
+        + Subject : string <<get>> <<set>>
+        + Message : string <<get>> <<set>>
+        + SentDate : DateTime <<get>> <<set>>
+        + DeliveryStatus : string <<get>> <<set>>
+        + GetVisitor() : Visitor
+        + GetPreRegistration() : VisitorPreRegistration?
+        + GetVisitorAccess() : VisitorAccess?
+    }
+    
+    class VisitorBadge {
+        + BadgeId : int <<get>> <<set>>
+        + BadgeNumber : string <<get>> <<set>>
+        + BadgeType : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + IsAvailable : bool <<get>> <<set>>
+        + AssignedVisitorAccessId : int? <<get>> <<set>>
+        + LastUsedDate : DateTime? <<get>> <<set>>
+        + GetAssignedVisitorAccess() : VisitorAccess?
+        + GetUsageHistory() : List<VisitorBadgeHistory>
+        + AssignToBadge(visitorAccessId:int) : void
+        + ReturnBadge() : void
+    }
+    
+    class VisitorBadgeHistory {
+        + HistoryId : int <<get>> <<set>>
+        + BadgeId : int <<get>> <<set>>
+        + VisitorAccessId : int <<get>> <<set>>
+        + AssignedDate : DateTime <<get>> <<set>>
+        + ReturnedDate : DateTime? <<get>> <<set>>
+        + GetBadge() : VisitorBadge
+        + GetVisitorAccess() : VisitorAccess
+    }
+    
+    class VisitorApproval {
+        + ApprovalId : int <<get>> <<set>>
+        + PreRegistrationId : int <<get>> <<set>>
+        + ApprovalType : string <<get>> <<set>>
+        + ApprovalLevel : int <<get>> <<set>>
+        + ApprovedById : int <<get>> <<set>>
+        + ApprovalDate : DateTime <<get>> <<set>>
+        + Decision : string <<get>> <<set>>
+        + Comments : string? <<get>> <<set>>
+        + GetPreRegistration() : VisitorPreRegistration
+        + GetApprovedBy() : Employee
+    }
+    
+    class VisitorEmergencyContact {
+        + ContactId : int <<get>> <<set>>
+        + VisitorId : int <<get>> <<set>>
+        + ContactName : string <<get>> <<set>>
+        + ContactPhone : string <<get>> <<set>>
+        + ContactEmail : string? <<get>> <<set>>
+        + Relationship : string <<get>> <<set>>
+        + IsPrimary : bool <<get>> <<set>>
+        + GetVisitor() : Visitor
+    }
+    
+    class VisitorDocument {
+        + DocumentId : int <<get>> <<set>>
+        + VisitorId : int <<get>> <<set>>
+        + DocumentType : string <<get>> <<set>>
+        + DocumentPath : string <<get>> <<set>>
+        + UploadDate : DateTime <<get>> <<set>>
+        + ExpiryDate : DateTime? <<get>> <<set>>
+        + VerificationStatus : string <<get>> <<set>>
+        + VerifiedById : int? <<get>> <<set>>
+        + VerificationDate : DateTime? <<get>> <<set>>
+        + GetVisitor() : Visitor
+        + GetVerifiedBy() : Employee?
+    }
+    
+    ' Enums
+    enum VisitorStatus {
+        Active = 0,
+        Inactive = 1,
+        Blacklisted = 2,
+        PendingApproval = 3
+    }
+    
+    enum AccessType {
+        Entry = 0,
+        Exit = 1,
+        AreaAccess = 2,
+        Emergency = 3
+    }
+    
+    enum NotificationType {
+        PreRegistration = 0,
+        Approval = 1,
+        CheckIn = 2,
+        CheckOut = 3,
+        Overdue = 4,
+        Emergency = 5
+    }
+    
+    enum ApprovalDecision {
+        Approved = 0,
+        Rejected = 1,
+        Pending = 2,
+        Conditional = 3
+    }
+    
+    ' Base Entity Relationships
+    BaseAuditableEntity <|-- Visitor
+    BaseAuditableEntity <|-- VisitorPreRegistration
+    BaseAuditableEntity <|-- VisitorAccess
+    BaseAuditableEntity <|-- VisitorAccessLog
+    BaseAuditableEntity <|-- AccessArea
+    BaseAuditableEntity <|-- VisitorAccessRule
+    BaseAuditableEntity <|-- VisitorNotification
+    BaseAuditableEntity <|-- VisitorBadge
+    BaseAuditableEntity <|-- VisitorBadgeHistory
+    BaseAuditableEntity <|-- VisitorApproval
+    BaseAuditableEntity <|-- VisitorEmergencyContact
+    BaseAuditableEntity <|-- VisitorDocument
+    
+    ' Internal Relationships
+    Visitor ||--o{ VisitorPreRegistration : "has pre-registrations"
+    Visitor ||--o{ VisitorAccess : "has visits"
+    Visitor ||--o{ VisitorNotification : "receives"
+    Visitor ||--o{ VisitorEmergencyContact : "has contacts"
+    Visitor ||--o{ VisitorDocument : "has documents"
+    
+    VisitorPreRegistration }o--|| Visitor : "for"
+    VisitorPreRegistration }o--|| Employee : "requested by"
+    VisitorPreRegistration }o--|| Employee : "hosted by"
+    VisitorPreRegistration }o--o| Employee : "approved by"
+    VisitorPreRegistration ||--o{ VisitorApproval : "has approvals"
+    VisitorPreRegistration ||--o| VisitorAccess : "becomes"
+    
+    VisitorAccess }o--|| Visitor : "by"
+    VisitorAccess }o--o| VisitorPreRegistration : "from"
+    VisitorAccess }o--|| Employee : "hosted by"
+    VisitorAccess }o--o| Employee : "escorted by"
+    VisitorAccess }o--|| AccessArea : "checked in at"
+    VisitorAccess }o--o| AccessArea : "checked out at"
+    VisitorAccess ||--o{ VisitorAccessLog : "generates"
+    VisitorAccess ||--o| VisitorBadge : "uses"
+    
+    VisitorAccessLog }o--|| VisitorAccess : "for"
+    VisitorAccessLog }o--|| AccessArea : "in"
+    
+    AccessArea ||--o{ VisitorAccessRule : "has rules"
+    AccessArea ||--o{ VisitorAccess : "hosts"
+    AccessArea ||--o{ VisitorAccessLog : "logs"
+    
+    VisitorAccessRule }o--|| AccessArea : "applies to"
+    
+    VisitorNotification }o--|| Visitor : "sent to"
+    VisitorNotification }o--o| VisitorPreRegistration : "about"
+    VisitorNotification }o--o| VisitorAccess : "about"
+    
+    VisitorBadge ||--o{ VisitorBadgeHistory : "has history"
+    VisitorBadge ||--o| VisitorAccess : "assigned to"
+    
+    VisitorBadgeHistory }o--|| VisitorBadge : "for"
+    VisitorBadgeHistory }o--|| VisitorAccess : "used in"
+    
+    VisitorApproval }o--|| VisitorPreRegistration : "for"
+    VisitorApproval }o--|| Employee : "approved by"
+    
+    VisitorEmergencyContact }o--|| Visitor : "for"
+    
+    VisitorDocument }o--|| Visitor : "belongs to"
+    VisitorDocument }o--o| Employee : "verified by"
+}
+
+' External Relationships (to be connected with other modules)
+note right of VisitorPreRegistration
+    Integra com Employee Management:
+    - RequestedBy: Employee
+    - HostEmployee: Employee
+    - ApprovedBy: Employee
+end note
+
+note right of VisitorAccess
+    Integra com Workplace Movement:
+    - AccessArea pode ser WorkPlace
+    - Regras de acesso por área
+end note
+
+note right of VisitorAccessRule
+    Integra com Access Control:
+    - Regras baseadas em horário
+    - Níveis de aprovação
+    - Controle de acesso por área
+end note
+
+@enduml

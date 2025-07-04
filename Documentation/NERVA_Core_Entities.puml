@@ -1,0 +1,83 @@
+@startuml NERVA_Core_Entities
+!define NERVA_CORE
+
+title NERVA - Entidades Principais do Sistema
+
+' ===== CORE BASE ENTITIES =====
+abstract class BaseEntity {
+    + Id : int <<get>> <<set>>
+    + AddDomainEvent(domainEvent:BaseEvent) : void
+    + RemoveDomainEvent(domainEvent:BaseEvent) : void
+    + ClearDomainEvents() : void
+}
+
+abstract class BaseAuditableEntity {
+    + CreatedBy : string? <<get>> <<set>>
+    + LastModifiedBy : string? <<get>> <<set>>
+}
+BaseEntity <|-- BaseAuditableEntity
+BaseAuditableEntity --> "Created" DateTimeOffset
+BaseAuditableEntity --> "LastModified" DateTimeOffset
+
+abstract class BaseEvent {
+}
+
+abstract class ValueObject {
+    # {static} EqualOperator(left:ValueObject, right:ValueObject) : bool
+    # {static} NotEqualOperator(left:ValueObject, right:ValueObject) : bool
+    # {abstract} GetEqualityComponents() : IEnumerable<object>
+    + <<override>> Equals(obj:object?) : bool
+    + <<override>> GetHashCode() : int
+}
+
+' ===== EMPLOYEE CORE =====
+abstract class Person {
+    + FirstName : string <<get>> <<set>>
+    + LastName : string <<get>> <<set>>
+    + Email : string <<get>> <<set>>
+    + Phone : string? <<get>> <<set>>
+    + FullName : string <<get>>
+}
+BaseAuditableEntity <|-- Person
+
+class Employee {
+    + EmployeeNumber : string <<get>> <<set>>
+    + HireDate : DateTime <<get>> <<set>>
+    + Salary : decimal <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+Person <|-- Employee
+Employee --> "Status" EmployeeStatus
+
+enum EmployeeStatus {
+    Active = 0,
+    Inactive = 1,
+    OnLeave = 2,
+    Suspended = 3,
+    Terminated = 4
+}
+
+class Department {
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + Budget : decimal <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- Department
+Department --> "Manager" Employee
+
+class Position {
+    + Title : string <<get>> <<set>>
+    + MinSalary : decimal <<get>> <<set>>
+    + MaxSalary : decimal <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- Position
+Position --> "Department" Department
+
+' ===== RELATIONSHIPS =====
+Employee --> "Department" Department
+Employee --> "Position" Position
+Employee --> "Manager" Employee
+
+@enduml

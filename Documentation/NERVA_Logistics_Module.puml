@@ -1,0 +1,93 @@
+@startuml NERVA_Logistics_Module
+!define NERVA_LOGISTICS
+
+title NERVA - Módulo de Logística
+
+' ===== PRODUCT ENTITIES =====
+abstract class Product {
+    + Name : string <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + Price : decimal <<get>> <<set>>
+    + Category : string <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+
+class ProductCategory {
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+
+class Supplier {
+    + Name : string <<get>> <<set>>
+    + Code : string <<get>> <<set>>
+    + ContactName : string <<get>> <<set>>
+    + Email : string <<get>> <<set>>
+    + Phone : string <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+
+' ===== WAREHOUSE ENTITIES =====
+class Warehouse {
+    + Name : string <<get>> <<set>>
+    + Code : string <<get>> <<set>>
+    + Address : string <<get>> <<set>>
+    + City : string <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+
+class Inventory {
+    + ProductId : int <<get>> <<set>>
+    + WarehouseId : int <<get>> <<set>>
+    + Quantity : int <<get>> <<set>>
+    + MinimumStock : int <<get>> <<set>>
+    + ReorderPoint : int <<get>> <<set>>
+    + Location : string? <<get>> <<set>>
+}
+
+' ===== PURCHASE ENTITIES =====
+class PurchaseOrder {
+    + OrderNumber : string <<get>> <<set>>
+    + SupplierId : int <<get>> <<set>>
+    + RequestedById : int <<get>> <<set>>
+    + TotalAmount : decimal <<get>> <<set>>
+}
+PurchaseOrder --> "Status" PurchaseOrderStatus
+PurchaseOrder --> "OrderDate" DateTime
+
+enum PurchaseOrderStatus {
+    Draft = 0,
+    Pending = 1,
+    Approved = 2,
+    Ordered = 3,
+    Received = 5,
+    Cancelled = 6
+}
+
+class PurchaseOrderItem {
+    + PurchaseOrderId : int <<get>> <<set>>
+    + ProductId : int <<get>> <<set>>
+    + Quantity : int <<get>> <<set>>
+    + UnitPrice : decimal <<get>> <<set>>
+    + ReceivedQuantity : int <<get>> <<set>> = 0
+}
+
+' ===== RELATIONSHIPS =====
+Product --> "Category" ProductCategory
+Product --> "Supplier" Supplier
+Warehouse --> "Manager" Employee
+Product ||--o{ Inventory : "stored as"
+Warehouse ||--o{ Inventory : "contains"
+Supplier ||--o{ PurchaseOrder : "supplies"
+PurchaseOrder ||--o{ PurchaseOrderItem : "contains"
+Product ||--o{ PurchaseOrderItem : "ordered as"
+PurchaseOrder --> "RequestedBy" Employee
+
+' ===== EXTERNAL REFERENCES =====
+class Employee {
+    + EmployeeNumber : string
+    + FirstName : string
+    + LastName : string
+}
+
+@enduml

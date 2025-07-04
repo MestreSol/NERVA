@@ -1,0 +1,150 @@
+@startuml NERVA_Summary
+!define NERVA_SUMMARY
+
+' ===== CORE ENTITIES =====
+package "Employee Management" {
+    class Employee {
+        + EmployeeNumber : string
+        + Status : EmployeeStatus
+        + HireDate : DateTime
+        + Salary : decimal
+    }
+    
+    class Department {
+        + Name : string
+        + Budget : decimal
+    }
+    
+    class Position {
+        + Title : string
+        + MinSalary : decimal
+        + MaxSalary : decimal
+    }
+    
+    enum EmployeeStatus {
+        Active, Inactive, OnLeave, Suspended, Terminated
+    }
+}
+
+package "Access Control" {
+    class AccessRole {
+        + Name : string
+        + Description : string
+    }
+    
+    class Permission {
+        + Name : string
+        + Resource : string
+        + Action : string
+    }
+    
+    class EmployeeRole {
+        + EmployeeId : int
+        + RoleId : int
+        + IsActive : bool
+    }
+}
+
+package "Approval Workflow" {
+    class ApprovalWorkflow {
+        + Name : string
+        + EntityType : string
+    }
+    
+    class ApprovalRequest {
+        + EntityId : int
+        + Status : ApprovalStatus
+        + RequestReason : string
+    }
+    
+    enum ApprovalStatus {
+        Pending, InProgress, Approved, Rejected, Cancelled
+    }
+}
+
+package "Logistics" {
+    class Product {
+        + Name : string
+        + Price : decimal
+        + Category : string
+    }
+    
+    class Warehouse {
+        + Name : string
+        + Code : string
+        + Address : string
+    }
+    
+    class Inventory {
+        + Quantity : int
+        + MinimumStock : int
+        + ReorderPoint : int
+    }
+    
+    class PurchaseOrder {
+        + OrderNumber : string
+        + TotalAmount : decimal
+        + Status : PurchaseOrderStatus
+    }
+    
+    enum PurchaseOrderStatus {
+        Draft, Pending, Approved, Ordered, Received, Cancelled
+    }
+}
+
+package "Workplace Movement" {
+    class WorkPlace {
+        + Code : string
+        + Name : string
+        + MaxCapacity : int
+        + CurrentCapacity : int
+        + Type : WorkPlaceType
+    }
+    
+    class WorkPlaceAssignment {
+        + StartDate : DateTime
+        + EndDate : DateTime
+        + IsActive : bool
+        + IsPrimary : bool
+    }
+    
+    class WorkPlaceMovementRequest {
+        + MovementType : WorkPlaceMovementType
+        + RequestReason : string
+        + Status : WorkPlaceMovementStatus
+    }
+    
+    enum WorkPlaceType {
+        Office, Desk, MeetingRoom, Laboratory, Factory, Warehouse, RemoteWork, FieldWork
+    }
+    
+    enum WorkPlaceMovementStatus {
+        Draft, Submitted, UnderReview, Approved, Rejected, Scheduled, InProgress, Completed, Cancelled
+    }
+}
+
+' ===== MAIN RELATIONSHIPS =====
+Employee ||--o{ EmployeeRole : "has roles"
+AccessRole ||--o{ EmployeeRole : "assigned to"
+AccessRole ||--o{ Permission : "has permissions"
+
+Employee ||--o{ ApprovalRequest : "requests"
+ApprovalWorkflow ||--o{ ApprovalRequest : "follows"
+
+Employee }o--|| Department : "works in"
+Employee }o--|| Position : "holds"
+Employee }o--|| Employee : "reports to"
+
+Product ||--o{ Inventory : "stored in"
+Warehouse ||--o{ Inventory : "contains"
+Employee }o--|| PurchaseOrder : "requests"
+Employee }o--|| Warehouse : "manages"
+
+Employee ||--o{ WorkPlaceAssignment : "assigned to"
+WorkPlace ||--o{ WorkPlaceAssignment : "contains"
+Employee ||--o{ WorkPlaceMovementRequest : "requests"
+WorkPlace ||--o{ WorkPlaceMovementRequest : "target"
+WorkPlace }o--|| Department : "belongs to"
+WorkPlaceMovementRequest }o--|| ApprovalRequest : "requires approval"
+
+@enduml

@@ -1,0 +1,37 @@
+@startuml NERVA_Complete_Modular
+!define NERVA_COMPLETE_MODULAR
+
+title NERVA - Sistema Completo (Visão Modular)
+
+' Include individual modules
+!include NERVA_Core_Entities.puml
+!include NERVA_Access_Control_Module.puml
+!include NERVA_Approval_Workflow_Module.puml
+!include NERVA_Logistics_Module.puml
+!include NERVA_Workplace_Movement_Module.puml
+
+' ===== CROSS-MODULE RELATIONSHIPS =====
+' These are the main integrations between modules
+
+' Employee is central to all modules
+Employee ||--o{ EmployeeRole : "has access roles"
+Employee ||--o{ ApprovalRequest : "creates requests"
+Employee ||--o{ PurchaseOrder : "initiates purchases"
+Employee ||--o{ WorkPlaceAssignment : "assigned to workplaces"
+Employee ||--o{ AccessLog : "access tracked"
+
+' Approval workflows integrate across modules
+ApprovalWorkflow ||--o{ WorkPlaceMovementRequest : "approves movements"
+ApprovalWorkflow ||--o{ PurchaseOrder : "approves purchases"
+ApprovalWorkflow ||--o{ EmployeeStatusChange : "approves status changes"
+
+' Department relationships across modules
+Department ||--o{ Employee : "contains"
+Department ||--o{ WorkPlace : "owns"
+Department ||--o{ PurchaseOrder : "requests for"
+
+note top of Employee : **Central Entity**\nConnects all modules\nand business processes
+
+note bottom of ApprovalWorkflow : **Process Engine**\nManages all approval\nworkflows across modules
+
+@enduml

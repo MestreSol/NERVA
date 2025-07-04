@@ -1,0 +1,391 @@
+@startuml NERVA_KPI_Analytics_Management
+!theme plain
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+
+title NERVA - KPIs e Analytics
+
+package "KPI & Analytics Management" as KPIAnalyticsManagement {
+    
+    class KPIMetric {
+        + MetricId : int <<get>> <<set>>
+        + MetricName : string <<get>> <<set>>
+        + MetricDescription : string <<get>> <<set>>
+        + MetricType : string <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + Unit : string <<get>> <<set>>
+        + CalculationMethod : string <<get>> <<set>>
+        + DataSource : string <<get>> <<set>>
+        + UpdateFrequency : string <<get>> <<set>>
+        + TargetValue : decimal? <<get>> <<set>>
+        + ThresholdGreen : decimal? <<get>> <<set>>
+        + ThresholdYellow : decimal? <<get>> <<set>>
+        + ThresholdRed : decimal? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + DashboardVisible : bool <<get>> <<set>>
+        + GetMetricValues() : List<KPIMetricValue>
+        + GetCurrentValue() : KPIMetricValue?
+        + GetTrend(days:int) : List<KPIMetricValue>
+        + CalculateValue(startDate:DateTime, endDate:DateTime) : decimal
+        + GetStatus() : string
+        + IsOnTarget() : bool
+    }
+    
+    class KPIMetricValue {
+        + ValueId : int <<get>> <<set>>
+        + MetricId : int <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + CalculatedDate : DateTime <<get>> <<set>>
+        + Period : string <<get>> <<set>>
+        + PeriodStart : DateTime <<get>> <<set>>
+        + PeriodEnd : DateTime <<get>> <<set>>
+        + Context : string? <<get>> <<set>>
+        + CalculatedById : int? <<get>> <<set>>
+        + GetMetric() : KPIMetric
+        + GetCalculatedBy() : Employee?
+        + GetStatus() : string
+        + CompareToTarget() : decimal
+        + CompareToPrevious() : decimal?
+    }
+    
+    class AnalyticsReport {
+        + ReportId : int <<get>> <<set>>
+        + ReportName : string <<get>> <<set>>
+        + ReportType : string <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + DataSources : string <<get>> <<set>>
+        + Parameters : string? <<get>> <<set>>
+        + GeneratedDate : DateTime <<get>> <<set>>
+        + GeneratedById : int <<get>> <<set>>
+        + PeriodStart : DateTime <<get>> <<set>>
+        + PeriodEnd : DateTime <<get>> <<set>>
+        + ReportData : string <<get>> <<set>>
+        + FilePath : string? <<get>> <<set>>
+        + IsScheduled : bool <<get>> <<set>>
+        + ScheduleExpression : string? <<get>> <<set>>
+        + GetGeneratedBy() : Employee
+        + GetReportItems() : List<AnalyticsReportItem>
+        + GetInsights() : List<AnalyticsInsight>
+        + Export(format:string) : string
+    }
+    
+    class AnalyticsReportItem {
+        + ItemId : int <<get>> <<set>>
+        + ReportId : int <<get>> <<set>>
+        + ItemName : string <<get>> <<set>>
+        + ItemType : string <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + DisplayOrder : int <<get>> <<set>>
+        + ChartType : string? <<get>> <<set>>
+        + ChartData : string? <<get>> <<set>>
+        + GetReport() : AnalyticsReport
+    }
+    
+    class Dashboard {
+        + DashboardId : int <<get>> <<set>>
+        + DashboardName : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + DashboardType : string <<get>> <<set>>
+        + Layout : string <<get>> <<set>>
+        + Configuration : string <<get>> <<set>>
+        + OwnerId : int <<get>> <<set>>
+        + IsPublic : bool <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + RefreshInterval : int <<get>> <<set>>
+        + GetOwner() : Employee
+        + GetWidgets() : List<DashboardWidget>
+        + GetAccess() : List<DashboardAccess>
+        + RefreshData() : void
+    }
+    
+    class DashboardWidget {
+        + WidgetId : int <<get>> <<set>>
+        + DashboardId : int <<get>> <<set>>
+        + WidgetName : string <<get>> <<set>>
+        + WidgetType : string <<get>> <<set>>
+        + MetricId : int? <<get>> <<set>>
+        + Configuration : string <<get>> <<set>>
+        + Position : string <<get>> <<set>>
+        + Size : string <<get>> <<set>>
+        + IsVisible : bool <<get>> <<set>>
+        + GetDashboard() : Dashboard
+        + GetMetric() : KPIMetric?
+        + GetData() : object
+        + Refresh() : void
+    }
+    
+    class DashboardAccess {
+        + AccessId : int <<get>> <<set>>
+        + DashboardId : int <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + AccessLevel : string <<get>> <<set>>
+        + GrantedDate : DateTime <<get>> <<set>>
+        + GrantedById : int <<get>> <<set>>
+        + GetDashboard() : Dashboard
+        + GetUser() : Employee
+        + GetGrantedBy() : Employee
+    }
+    
+    class PerformanceIndicator {
+        + IndicatorId : int <<get>> <<set>>
+        + IndicatorName : string <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + BusinessArea : string <<get>> <<set>>
+        + CalculationLogic : string <<get>> <<set>>
+        + Frequency : string <<get>> <<set>>
+        + OwnerId : int <<get>> <<set>>
+        + TargetValue : decimal? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetOwner() : Employee
+        + GetValues() : List<PerformanceIndicatorValue>
+        + CalculateCurrentValue() : decimal
+        + GetTrend() : string
+    }
+    
+    class PerformanceIndicatorValue {
+        + ValueId : int <<get>> <<set>>
+        + IndicatorId : int <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + Period : string <<get>> <<set>>
+        + PeriodDate : DateTime <<get>> <<set>>
+        + CalculatedDate : DateTime <<get>> <<set>>
+        + GetIndicator() : PerformanceIndicator
+    }
+    
+    class AnalyticsInsight {
+        + InsightId : int <<get>> <<set>>
+        + ReportId : int? <<get>> <<set>>
+        + MetricId : int? <<get>> <<set>>
+        + InsightType : string <<get>> <<set>>
+        + Title : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Severity : string <<get>> <<set>>
+        + Confidence : decimal <<get>> <<set>>
+        + DetectedDate : DateTime <<get>> <<set>>
+        + IsActionable : bool <<get>> <<set>>
+        + RecommendedAction : string? <<get>> <<set>>
+        + GetReport() : AnalyticsReport?
+        + GetMetric() : KPIMetric?
+    }
+    
+    class DataAggregation {
+        + AggregationId : int <<get>> <<set>>
+        + AggregationName : string <<get>> <<set>>
+        + DataSource : string <<get>> <<set>>
+        + AggregationType : string <<get>> <<set>>
+        + Query : string <<get>> <<set>>
+        + ScheduleExpression : string <<get>> <<set>>
+        + LastRunDate : DateTime? <<get>> <<set>>
+        + NextRunDate : DateTime? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetExecutionHistory() : List<AggregationExecution>
+        + Execute() : AggregationResult
+    }
+    
+    class AggregationExecution {
+        + ExecutionId : int <<get>> <<set>>
+        + AggregationId : int <<get>> <<set>>
+        + StartTime : DateTime <<get>> <<set>>
+        + EndTime : DateTime? <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + RecordsProcessed : int? <<get>> <<set>>
+        + ErrorMessage : string? <<get>> <<set>>
+        + GetAggregation() : DataAggregation
+        + GetDuration() : TimeSpan?
+        + IsSuccessful() : bool
+    }
+    
+    class AlertRule {
+        + RuleId : int <<get>> <<set>>
+        + RuleName : string <<get>> <<set>>
+        + MetricId : int? <<get>> <<set>>
+        + Condition : string <<get>> <<set>>
+        + Threshold : decimal <<get>> <<set>>
+        + Operator : string <<get>> <<set>>
+        + Severity : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + NotificationChannels : string <<get>> <<set>>
+        + GetMetric() : KPIMetric?
+        + GetAlerts() : List<MetricAlert>
+        + EvaluateCondition(value:decimal) : bool
+    }
+    
+    class MetricAlert {
+        + AlertId : int <<get>> <<set>>
+        + RuleId : int <<get>> <<set>>
+        + MetricId : int? <<get>> <<set>>
+        + AlertDate : DateTime <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + Message : string <<get>> <<set>>
+        + Severity : string <<get>> <<set>>
+        + IsAcknowledged : bool <<get>> <<set>>
+        + AcknowledgedById : int? <<get>> <<set>>
+        + AcknowledgedDate : DateTime? <<get>> <<set>>
+        + GetRule() : AlertRule
+        + GetMetric() : KPIMetric?
+        + GetAcknowledgedBy() : Employee?
+    }
+    
+    class AnalyticsExport {
+        + ExportId : int <<get>> <<set>>
+        + ExportName : string <<get>> <<set>>
+        + ExportType : string <<get>> <<set>>
+        + ReportId : int? <<get>> <<set>>
+        + DashboardId : int? <<get>> <<set>>
+        + Format : string <<get>> <<set>>
+        + ExportDate : DateTime <<get>> <<set>>
+        + RequestedById : int <<get>> <<set>>
+        + FilePath : string <<get>> <<set>>
+        + FileSize : long <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + GetReport() : AnalyticsReport?
+        + GetDashboard() : Dashboard?
+        + GetRequestedBy() : Employee
+    }
+    
+    ' Enums
+    enum MetricType {
+        Counter = 0,
+        Gauge = 1,
+        Rate = 2,
+        Percentage = 3,
+        Ratio = 4,
+        Duration = 5
+    }
+    
+    enum ReportType {
+        Operational = 0,
+        Strategic = 1,
+        Compliance = 2,
+        Performance = 3,
+        Financial = 4,
+        Custom = 5
+    }
+    
+    enum DashboardType {
+        Executive = 0,
+        Operational = 1,
+        Departmental = 2,
+        Personal = 3,
+        Public = 4
+    }
+    
+    enum WidgetType {
+        Chart = 0,
+        Table = 1,
+        KPI = 2,
+        Gauge = 3,
+        Map = 4,
+        Text = 5
+    }
+    
+    enum InsightType {
+        Trend = 0,
+        Anomaly = 1,
+        Threshold = 2,
+        Correlation = 3,
+        Prediction = 4
+    }
+    
+    enum AlertSeverity {
+        Info = 0,
+        Warning = 1,
+        Critical = 2,
+        Emergency = 3
+    }
+    
+    ' Base Entity Relationships
+    BaseAuditableEntity <|-- KPIMetric
+    BaseAuditableEntity <|-- KPIMetricValue
+    BaseAuditableEntity <|-- AnalyticsReport
+    BaseAuditableEntity <|-- AnalyticsReportItem
+    BaseAuditableEntity <|-- Dashboard
+    BaseAuditableEntity <|-- DashboardWidget
+    BaseAuditableEntity <|-- DashboardAccess
+    BaseAuditableEntity <|-- PerformanceIndicator
+    BaseAuditableEntity <|-- PerformanceIndicatorValue
+    BaseAuditableEntity <|-- AnalyticsInsight
+    BaseAuditableEntity <|-- DataAggregation
+    BaseAuditableEntity <|-- AggregationExecution
+    BaseAuditableEntity <|-- AlertRule
+    BaseAuditableEntity <|-- MetricAlert
+    BaseAuditableEntity <|-- AnalyticsExport
+    
+    ' Internal Relationships
+    KPIMetric ||--o{ KPIMetricValue : "values"
+    KPIMetric ||--o{ DashboardWidget : "displayed in"
+    KPIMetric ||--o{ AlertRule : "monitored by"
+    KPIMetric ||--o{ AnalyticsInsight : "generates"
+    
+    KPIMetricValue }o--|| KPIMetric : "measures"
+    KPIMetricValue }o--o| Employee : "calculated by"
+    
+    AnalyticsReport }o--|| Employee : "generated by"
+    AnalyticsReport ||--o{ AnalyticsReportItem : "contains"
+    AnalyticsReport ||--o{ AnalyticsInsight : "insights"
+    AnalyticsReport ||--o{ AnalyticsExport : "exported"
+    
+    AnalyticsReportItem }o--|| AnalyticsReport : "belongs to"
+    
+    Dashboard }o--|| Employee : "owned by"
+    Dashboard ||--o{ DashboardWidget : "widgets"
+    Dashboard ||--o{ DashboardAccess : "access"
+    Dashboard ||--o{ AnalyticsExport : "exported"
+    
+    DashboardWidget }o--|| Dashboard : "belongs to"
+    DashboardWidget }o--o| KPIMetric : "displays"
+    
+    DashboardAccess }o--|| Dashboard : "accesses"
+    DashboardAccess }o--|| Employee : "granted to"
+    DashboardAccess }o--|| Employee : "granted by"
+    
+    PerformanceIndicator }o--|| Employee : "owned by"
+    PerformanceIndicator ||--o{ PerformanceIndicatorValue : "values"
+    
+    PerformanceIndicatorValue }o--|| PerformanceIndicator : "measures"
+    
+    AnalyticsInsight }o--o| AnalyticsReport : "from report"
+    AnalyticsInsight }o--o| KPIMetric : "about metric"
+    
+    DataAggregation ||--o{ AggregationExecution : "executions"
+    
+    AggregationExecution }o--|| DataAggregation : "executes"
+    
+    AlertRule }o--o| KPIMetric : "monitors"
+    AlertRule ||--o{ MetricAlert : "triggers"
+    
+    MetricAlert }o--|| AlertRule : "triggered by"
+    MetricAlert }o--o| KPIMetric : "about"
+    MetricAlert }o--o| Employee : "acknowledged by"
+    
+    AnalyticsExport }o--o| AnalyticsReport : "exports"
+    AnalyticsExport }o--o| Dashboard : "exports"
+    AnalyticsExport }o--|| Employee : "requested by"
+}
+
+' External Relationships Notes
+note right of KPIMetric
+    Dados alimentados por:
+    - Employee Management
+    - Approval Workflow
+    - Logistics
+    - Resource Reservation
+    - Visitor Management
+    - Compliance Engine
+end note
+
+note right of DataAggregation
+    Integra com:
+    - Kafka Consumers
+    - Azure Monitor
+    - Power BI
+    - Elastic Stack
+    - Event Streaming
+end note
+
+@enduml

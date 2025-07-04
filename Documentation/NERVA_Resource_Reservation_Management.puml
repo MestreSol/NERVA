@@ -1,0 +1,344 @@
+@startuml NERVA_Resource_Reservation_Management
+!theme plain
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+
+title NERVA - Reserva Inteligente de Recursos
+
+package "Resource Reservation Management" as ResourceReservationManagement {
+    
+    class Resource {
+        + ResourceId : int <<get>> <<set>>
+        + ResourceName : string <<get>> <<set>>
+        + ResourceType : string <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + Location : string <<get>> <<set>>
+        + Building : string? <<get>> <<set>>
+        + Floor : string? <<get>> <<set>>
+        + Room : string? <<get>> <<set>>
+        + Capacity : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + RequiresApproval : bool <<get>> <<set>>
+        + MinBookingWindow : int <<get>> <<set>>
+        + MaxBookingWindow : int <<get>> <<set>>
+        + MinDuration : int <<get>> <<set>>
+        + MaxDuration : int <<get>> <<set>>
+        + AllowRecurring : bool <<get>> <<set>>
+        + AutoReleaseMinutes : int <<get>> <<set>>
+        + RequiresCheckIn : bool <<get>> <<set>>
+        + HasIoTSensors : bool <<get>> <<set>>
+        + MaintenanceStatus : string <<get>> <<set>>
+        + GetReservations() : List<ResourceReservation>
+        + GetUsageHistory() : List<ResourceUsage>
+        + GetRules() : List<ResourceRule>
+        + GetAvailability(startDate:DateTime, endDate:DateTime) : List<TimeSlot>
+        + IsAvailable(startTime:DateTime, endTime:DateTime) : bool
+        + GetCurrentUsage() : ResourceUsage?
+        + GetIoTSensors() : List<IoTSensor>
+    }
+    
+    class ResourceReservation {
+        + ReservationId : int <<get>> <<set>>
+        + ResourceId : int <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + ReservationDate : DateTime <<get>> <<set>>
+        + StartTime : DateTime <<get>> <<set>>
+        + EndTime : DateTime <<get>> <<set>>
+        + Purpose : string <<get>> <<set>>
+        + Attendees : int? <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + CheckInTime : DateTime? <<get>> <<set>>
+        + CheckOutTime : DateTime? <<get>> <<set>>
+        + ActualStartTime : DateTime? <<get>> <<set>>
+        + ActualEndTime : DateTime? <<get>> <<set>>
+        + IsRecurring : bool <<get>> <<set>>
+        + RecurrencePattern : string? <<get>> <<set>>
+        + ParentReservationId : int? <<get>> <<set>>
+        + ApprovedById : int? <<get>> <<set>>
+        + ApprovalDate : DateTime? <<get>> <<set>>
+        + CancelledDate : DateTime? <<get>> <<set>>
+        + CancellationReason : string? <<get>> <<set>>
+        + AutoReleased : bool <<get>> <<set>>
+        + GetResource() : Resource
+        + GetUser() : Employee
+        + GetApprovedBy() : Employee?
+        + GetParentReservation() : ResourceReservation?
+        + GetChildReservations() : List<ResourceReservation>
+        + GetDuration() : TimeSpan
+        + GetActualDuration() : TimeSpan?
+        + PerformCheckIn() : void
+        + PerformCheckOut() : void
+        + CalculateUtilization() : decimal
+        + IsOverdue() : bool
+        + IsNoShow() : bool
+        + CanBeCancelled() : bool
+        + CanBeModified() : bool
+    }
+    
+    class ResourceRule {
+        + RuleId : int <<get>> <<set>>
+        + ResourceId : int? <<get>> <<set>>
+        + ResourceType : string? <<get>> <<set>>
+        + RuleName : string <<get>> <<set>>
+        + RuleType : string <<get>> <<set>>
+        + RuleCondition : string <<get>> <<set>>
+        + RuleAction : string <<get>> <<set>>
+        + Priority : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + EffectiveStartDate : DateTime <<get>> <<set>>
+        + EffectiveEndDate : DateTime? <<get>> <<set>>
+        + DaysOfWeek : string? <<get>> <<set>>
+        + TimeRanges : string? <<get>> <<set>>
+        + AllowedUserTypes : string? <<get>> <<set>>
+        + RequiredApprovalLevel : int? <<get>> <<set>>
+        + GetResource() : Resource?
+        + ValidateReservation(reservation:ResourceReservation) : bool
+        + GetViolations(reservation:ResourceReservation) : List<string>
+    }
+    
+    class ResourceUsage {
+        + UsageId : int <<get>> <<set>>
+        + ResourceId : int <<get>> <<set>>
+        + ReservationId : int? <<get>> <<set>>
+        + UserId : int? <<get>> <<set>>
+        + StartTime : DateTime <<get>> <<set>>
+        + EndTime : DateTime? <<get>> <<set>>
+        + UsageType : string <<get>> <<set>>
+        + ActualAttendees : int? <<get>> <<set>>
+        + UtilizationRate : decimal? <<get>> <<set>>
+        + EnergyConsumption : decimal? <<get>> <<set>>
+        + Temperature : decimal? <<get>> <<set>>
+        + Humidity : decimal? <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + DetectedByIoT : bool <<get>> <<set>>
+        + GetResource() : Resource
+        + GetReservation() : ResourceReservation?
+        + GetUser() : Employee?
+        + GetDuration() : TimeSpan?
+        + IsCurrentlyInUse() : bool
+    }
+    
+    class IoTSensor {
+        + SensorId : int <<get>> <<set>>
+        + ResourceId : int <<get>> <<set>>
+        + SensorType : string <<get>> <<set>>
+        + SensorName : string <<get>> <<set>>
+        + DeviceId : string <<get>> <<set>>
+        + Location : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + LastPingTime : DateTime? <<get>> <<set>>
+        + BatteryLevel : int? <<get>> <<set>>
+        + FirmwareVersion : string? <<get>> <<set>>
+        + GetResource() : Resource
+        + GetReadings() : List<IoTSensorReading>
+        + GetLatestReading() : IoTSensorReading?
+        + IsOnline() : bool
+        + DetectOccupancy() : bool
+        + GetCurrentValue() : decimal?
+    }
+    
+    class IoTSensorReading {
+        + ReadingId : int <<get>> <<set>>
+        + SensorId : int <<get>> <<set>>
+        + ReadingTime : DateTime <<get>> <<set>>
+        + ReadingType : string <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + Unit : string <<get>> <<set>>
+        + Quality : string <<get>> <<set>>
+        + GetSensor() : IoTSensor
+    }
+    
+    class ResourceMaintenance {
+        + MaintenanceId : int <<get>> <<set>>
+        + ResourceId : int <<get>> <<set>>
+        + MaintenanceType : string <<get>> <<set>>
+        + ScheduledDate : DateTime <<get>> <<set>>
+        + CompletedDate : DateTime? <<get>> <<set>>
+        + Duration : TimeSpan? <<get>> <<set>>
+        + TechnicianId : int? <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + Cost : decimal? <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + GetResource() : Resource
+        + GetTechnician() : Employee?
+        + IsCompleted() : bool
+        + IsOverdue() : bool
+    }
+    
+    class ResourceAlert {
+        + AlertId : int <<get>> <<set>>
+        + ResourceId : int <<get>> <<set>>
+        + AlertType : string <<get>> <<set>>
+        + AlertLevel : string <<get>> <<set>>
+        + Message : string <<get>> <<set>>
+        + AlertTime : DateTime <<get>> <<set>>
+        + ResolvedTime : DateTime? <<get>> <<set>>
+        + ResolvedById : int? <<get>> <<set>>
+        + IsResolved : bool <<get>> <<set>>
+        + GetResource() : Resource
+        + GetResolvedBy() : Employee?
+    }
+    
+    class ResourceConfiguration {
+        + ConfigurationId : int <<get>> <<set>>
+        + ResourceId : int <<get>> <<set>>
+        + ConfigurationName : string <<get>> <<set>>
+        + ConfigurationValue : string <<get>> <<set>>
+        + ConfigurationType : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetResource() : Resource
+    }
+    
+    class ResourceAvailability {
+        + AvailabilityId : int <<get>> <<set>>
+        + ResourceId : int <<get>> <<set>>
+        + Date : DateTime <<get>> <<set>>
+        + StartTime : TimeSpan <<get>> <<set>>
+        + EndTime : TimeSpan <<get>> <<set>>
+        + IsAvailable : bool <<get>> <<set>>
+        + Reason : string? <<get>> <<set>>
+        + GetResource() : Resource
+    }
+    
+    class ResourceUtilizationReport {
+        + ReportId : int <<get>> <<set>>
+        + ResourceId : int? <<get>> <<set>>
+        + ReportPeriod : string <<get>> <<set>>
+        + StartDate : DateTime <<get>> <<set>>
+        + EndDate : DateTime <<get>> <<set>>
+        + TotalHours : decimal <<get>> <<set>>
+        + ReservedHours : decimal <<get>> <<set>>
+        + ActualUsageHours : decimal <<get>> <<set>>
+        + UtilizationRate : decimal <<get>> <<set>>
+        + NoShowRate : decimal <<get>> <<set>>
+        + GeneratedDate : DateTime <<get>> <<set>>
+        + GetResource() : Resource?
+    }
+    
+    ' Enums
+    enum ResourceType {
+        MeetingRoom = 0,
+        ConferenceRoom = 1,
+        Vehicle = 2,
+        Equipment = 3,
+        Workspace = 4,
+        Parking = 5,
+        Facility = 6
+    }
+    
+    enum ReservationStatus {
+        Pending = 0,
+        Confirmed = 1,
+        CheckedIn = 2,
+        InUse = 3,
+        Completed = 4,
+        Cancelled = 5,
+        NoShow = 6,
+        AutoReleased = 7
+    }
+    
+    enum UsageType {
+        Scheduled = 0,
+        WalkIn = 1,
+        Emergency = 2,
+        Maintenance = 3,
+        Cleaning = 4
+    }
+    
+    enum SensorType {
+        Occupancy = 0,
+        Temperature = 1,
+        Humidity = 2,
+        Light = 3,
+        Sound = 4,
+        CO2 = 5,
+        Motion = 6,
+        Door = 7
+    }
+    
+    enum MaintenanceStatus {
+        Operational = 0,
+        Maintenance = 1,
+        OutOfOrder = 2,
+        Reserved = 3
+    }
+    
+    ' Base Entity Relationships
+    BaseAuditableEntity <|-- Resource
+    BaseAuditableEntity <|-- ResourceReservation
+    BaseAuditableEntity <|-- ResourceRule
+    BaseAuditableEntity <|-- ResourceUsage
+    BaseAuditableEntity <|-- IoTSensor
+    BaseAuditableEntity <|-- IoTSensorReading
+    BaseAuditableEntity <|-- ResourceMaintenance
+    BaseAuditableEntity <|-- ResourceAlert
+    BaseAuditableEntity <|-- ResourceConfiguration
+    BaseAuditableEntity <|-- ResourceAvailability
+    BaseAuditableEntity <|-- ResourceUtilizationReport
+    
+    ' Internal Relationships
+    Resource ||--o{ ResourceReservation : "reserved"
+    Resource ||--o{ ResourceRule : "has rules"
+    Resource ||--o{ ResourceUsage : "usage history"
+    Resource ||--o{ IoTSensor : "has sensors"
+    Resource ||--o{ ResourceMaintenance : "maintenance"
+    Resource ||--o{ ResourceAlert : "alerts"
+    Resource ||--o{ ResourceConfiguration : "configuration"
+    Resource ||--o{ ResourceAvailability : "availability"
+    Resource ||--o{ ResourceUtilizationReport : "reports"
+    
+    ResourceReservation }o--|| Resource : "reserves"
+    ResourceReservation }o--|| Employee : "reserved by"
+    ResourceReservation }o--o| Employee : "approved by"
+    ResourceReservation }o--o| ResourceReservation : "parent"
+    ResourceReservation ||--o{ ResourceReservation : "children"
+    ResourceReservation ||--o| ResourceUsage : "generates"
+    
+    ResourceRule }o--o| Resource : "applies to"
+    
+    ResourceUsage }o--|| Resource : "uses"
+    ResourceUsage }o--o| ResourceReservation : "from"
+    ResourceUsage }o--o| Employee : "used by"
+    
+    IoTSensor }o--|| Resource : "monitors"
+    IoTSensor ||--o{ IoTSensorReading : "readings"
+    
+    IoTSensorReading }o--|| IoTSensor : "from"
+    
+    ResourceMaintenance }o--|| Resource : "maintains"
+    ResourceMaintenance }o--o| Employee : "performed by"
+    
+    ResourceAlert }o--|| Resource : "alerts for"
+    ResourceAlert }o--o| Employee : "resolved by"
+    
+    ResourceConfiguration }o--|| Resource : "configures"
+    
+    ResourceAvailability }o--|| Resource : "availability for"
+    
+    ResourceUtilizationReport }o--o| Resource : "reports on"
+}
+
+' External Relationships Notes
+note right of ResourceReservation
+    Integra com:
+    - Employee Management (usuários)
+    - Approval Workflow (aprovações)
+    - Workplace Movement (espaços)
+    - Visitor Management (visitantes)
+end note
+
+note right of IoTSensor
+    Integra com:
+    - Kafka (eventos em tempo real)
+    - Azure IoT Hub (telemetria)
+    - Analytics (dashboards)
+end note
+
+@enduml

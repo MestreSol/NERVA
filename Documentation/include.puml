@@ -1,0 +1,1461 @@
+@startuml
+!theme plain
+skinparam packageStyle rectangle
+skinparam defaultFontSize 10
+skinparam linetype ortho
+
+package "NERVA - Sistema de Gestão Empresarial" {
+    
+    package "Web Layer" as WebLayer {
+        class DependencyInjection <<static>> {
+            + {static} AddWebServices(builder:IHostApplicationBuilder) : void
+            + {static} AddKeyVaultIfConfigured(builder:IHostApplicationBuilder) : void
+        }
+        class Program <<partial>> {
+        }
+    }
+    
+    package "Application Layer" as ApplicationLayer {
+        class DependencyInjection <<static>> {
+            + {static} AddApplicationServices(builder:IHostApplicationBuilder) : void
+        }
+    }
+    
+    package "Infrastructure Layer" as InfrastructureLayer {
+        class DependencyInjection <<static>> {
+            + {static} AddInfrastructureServices(builder:IHostApplicationBuilder) : void
+        }
+    }
+    
+    package "Domain Layer" as DomainLayer {
+        
+        package "Core Entities" as CoreEntities {
+abstract class BaseTestFixture {
+    + <<async>> TestSetUp() : Task
+}
+class CustomWebApplicationFactory {
+    - <<readonly>> _connectionString : string
+    + CustomWebApplicationFactory(connection:DbConnection, connectionString:string)
+    # <<override>> ConfigureWebHost(builder:IWebHostBuilder) : void
+}
+class "WebApplicationFactory`1"<T> {
+}
+"WebApplicationFactory`1" "<Program>" <|-- CustomWebApplicationFactory
+CustomWebApplicationFactory --> "_connection" DbConnection
+interface ITestDatabase {
+    InitialiseAsync() : Task
+    GetConnection() : DbConnection
+    GetConnectionString() : string
+    ResetAsync() : Task
+    DisposeAsync() : Task
+}
+class SqlTestcontainersTestDatabase {
+    - <<const>> DefaultDatabase : string = "NERVATestDb"
+    - _connectionString : string
+    + SqlTestcontainersTestDatabase()
+    + <<async>> InitialiseAsync() : Task
+    + GetConnection() : DbConnection
+    + GetConnectionString() : string
+    + <<async>> ResetAsync() : Task
+    + <<async>> DisposeAsync() : Task
+}
+ITestDatabase <|-- SqlTestcontainersTestDatabase
+SqlTestcontainersTestDatabase --> "_container" MsSqlContainer
+SqlTestcontainersTestDatabase o-> "_connection" DbConnection
+SqlTestcontainersTestDatabase o-> "_respawner" Respawner
+class SqlTestDatabase {
+    - <<readonly>> _connectionString : string
+    + SqlTestDatabase()
+    + <<async>> InitialiseAsync() : Task
+    + GetConnection() : DbConnection
+    + GetConnectionString() : string
+    + <<async>> ResetAsync() : Task
+    + <<async>> DisposeAsync() : Task
+}
+ITestDatabase <|-- SqlTestDatabase
+SqlTestDatabase o-> "_connection" SqlConnection
+SqlTestDatabase o-> "_respawner" Respawner
+class TestDatabaseFactory <<static>> {
+    + {static} <<async>> CreateAsync() : Task<ITestDatabase>
+}
+class Testing <<partial>> {
+    - {static} _userId : string?
+    + <<async>> RunBeforeAnyTests() : Task
+    + {static} <<async>> SendAsync(request:IRequest<TResponse>) : Task<TResponse>
+    + {static} <<async>> SendAsync(request:IBaseRequest) : Task
+    + {static} GetUserId() : string?
+    + {static} <<async>> RunAsDefaultUserAsync() : Task<string>
+    + {static} <<async>> RunAsAdministratorAsync() : Task<string>
+    + {static} <<async>> RunAsUserAsync(userName:string, password:string, roles:string[]) : Task<string>
+    + {static} <<async>> ResetState() : Task
+    + {static} <<async>> FindAsync(keyValues:object[]) : Task<TEntity?>
+    + {static} <<async>> AddAsync(entity:TEntity) : Task
+    + {static} <<async>> CountAsync() : Task<int>
+    + <<async>> RunAfterAnyTests() : Task
+}
+Testing o-> "_database" ITestDatabase
+Testing o-> "_factory" CustomWebApplicationFactory
+Testing o-> "_scopeFactory" IServiceScopeFactory
+class ConfigurationHelper <<static>> {
+    {static} - ConfigurationHelper()
+    - {static} _baseUrl : string?
+    + {static} GetBaseUrl() : string
+}
+ConfigurationHelper --> "_configuration" IConfiguration
+abstract class BaseAuditableEntity {
+    + CreatedBy : string? <<get>> <<set>>
+    + LastModifiedBy : string? <<get>> <<set>>
+}
+BaseEntity <|-- BaseAuditableEntity
+BaseAuditableEntity --> "Created" DateTimeOffset
+BaseAuditableEntity --> "LastModified" DateTimeOffset
+abstract class BaseEntity {
+    + Id : int <<get>> <<set>>
+    + AddDomainEvent(domainEvent:BaseEvent) : void
+    + RemoveDomainEvent(domainEvent:BaseEvent) : void
+    + ClearDomainEvents() : void
+}
+class "List`1"<T> {
+}
+class "IReadOnlyCollection`1"<T> {
+}
+BaseEntity o-> "_domainEvents<BaseEvent>" "List`1"
+BaseEntity --> "DomainEvents<BaseEvent>" "IReadOnlyCollection`1"
+abstract class BaseEvent {
+}
+INotification <|-- BaseEvent
+abstract class ValueObject {
+    # {static} EqualOperator(left:ValueObject, right:ValueObject) : bool
+    # {static} NotEqualOperator(left:ValueObject, right:ValueObject) : bool
+    # {abstract} GetEqualityComponents() : IEnumerable<object>
+    + <<override>> Equals(obj:object?) : bool
+    + <<override>> GetHashCode() : int
+}
+abstract class Policies {
+    + <<const>> CanPurge : string
+}
+abstract class Roles {
+    + <<const>> Administrator : string
+}
+class DigitalProduct {
+    + DownloadUrl : string <<get>> <<set>>
+    + FileSize : long <<get>> <<set>>
+    + FileFormat : string <<get>> <<set>>
+    + LicenseKey : string <<get>> <<set>>
+}
+Product <|-- DigitalProduct
+DigitalProduct --> "ReleaseDate" DateTime
+class FisicalProduct {
+    + SKU : string <<get>> <<set>>
+    + StockQuantity : int <<get>> <<set>>
+    + Manufacturer : string <<get>> <<set>>
+}
+Product <|-- FisicalProduct
+FisicalProduct --> "Dimensions" Vector3
+FisicalProduct --> "ManufactureDate" DateTime
+FisicalProduct --> "ExpiryDate" DateTime
+abstract class Product {
+    + Name : string <<get>> <<set>>
+    + Description : string <<get>> <<set>>
+    + Price : decimal <<get>> <<set>>
+    + Category : string <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- Product
+class TodoItem {
+    + ListId : int <<get>> <<set>>
+    + Title : string? <<get>> <<set>>
+    + Note : string? <<get>> <<set>>
+    - _done : bool
+    + Done : bool <<get>> <<set>>
+}
+BaseAuditableEntity <|-- TodoItem
+TodoItem --> "Priority" PriorityLevel
+TodoItem --> "Reminder" DateTime
+TodoItem o-> "List" TodoList
+class TodoList {
+    + Title : string? <<get>> <<set>>
+}
+class "IList`1"<T> {
+}
+BaseAuditableEntity <|-- TodoList
+TodoList o-> "Colour" Colour
+TodoList o-> "Items<TodoItem>" "IList`1"
+enum PriorityLevel {
+    None= 0,
+    Low= 1,
+    Medium= 2,
+    High= 3,
+}
+class TodoItemCompletedEvent {
+    + TodoItemCompletedEvent(item:TodoItem)
+}
+BaseEvent <|-- TodoItemCompletedEvent
+TodoItemCompletedEvent --> "Item" TodoItem
+class TodoItemCreatedEvent {
+    + TodoItemCreatedEvent(item:TodoItem)
+}
+BaseEvent <|-- TodoItemCreatedEvent
+TodoItemCreatedEvent --> "Item" TodoItem
+class TodoItemDeletedEvent {
+    + TodoItemDeletedEvent(item:TodoItem)
+}
+BaseEvent <|-- TodoItemDeletedEvent
+TodoItemDeletedEvent --> "Item" TodoItem
+class UnsupportedColourException {
+    + UnsupportedColourException(code:string)
+}
+Exception <|-- UnsupportedColourException
+class Colour {
+    + {static} From(code:string) : Colour
+    + Code : string <<get>>
+    + <<override>> ToString() : string
+    # <<override>> GetEqualityComponents() : IEnumerable<object>
+}
+class "IEnumerable`1"<T> {
+}
+ValueObject <|-- Colour
+Colour --> "White" Colour
+Colour --> "Red" Colour
+Colour --> "Orange" Colour
+Colour --> "Yellow" Colour
+Colour --> "Green" Colour
+Colour --> "Blue" Colour
+Colour --> "Purple" Colour
+Colour --> "Grey" Colour
+Colour --> "SupportedColours<Colour>" "IEnumerable`1"
+class ApplicationDbContext {
+    + ApplicationDbContext(options:DbContextOptions<ApplicationDbContext>)
+    # <<override>> OnModelCreating(builder:ModelBuilder) : void
+}
+class "IdentityDbContext`1"<T> {
+}
+class "DbSet`1"<T> {
+}
+"IdentityDbContext`1" "<ApplicationUser>" <|-- ApplicationDbContext
+IApplicationDbContext <|-- ApplicationDbContext
+ApplicationDbContext --> "TodoLists<TodoList>" "DbSet`1"
+ApplicationDbContext --> "TodoItems<TodoItem>" "DbSet`1"
+class InitialiserExtensions <<static>> {
+    + {static} AddAsyncSeeding(builder:DbContextOptionsBuilder, serviceProvider:IServiceProvider) : void
+    + {static} <<async>> InitialiseDatabaseAsync(app:WebApplication) : Task
+}
+class ApplicationDbContextInitialiser {
+    + ApplicationDbContextInitialiser(logger:ILogger<ApplicationDbContextInitialiser>, context:ApplicationDbContext, userManager:UserManager<ApplicationUser>, roleManager:RoleManager<IdentityRole>)
+    + <<async>> InitialiseAsync() : Task
+    + <<async>> SeedAsync() : Task
+    + <<async>> TrySeedAsync() : Task
+}
+class "ILogger`1"<T> {
+}
+class "UserManager`1"<T> {
+}
+class "RoleManager`1"<T> {
+}
+ApplicationDbContextInitialiser --> "_logger<ApplicationDbContextInitialiser>" "ILogger`1"
+ApplicationDbContextInitialiser --> "_context" ApplicationDbContext
+ApplicationDbContextInitialiser --> "_userManager<ApplicationUser>" "UserManager`1"
+ApplicationDbContextInitialiser --> "_roleManager<IdentityRole>" "RoleManager`1"
+class ApplicationUser {
+}
+IdentityUser <|-- ApplicationUser
+class IdentityResultExtensions <<static>> {
+    + {static} ToApplicationResult(result:IdentityResult) : Result
+}
+class IdentityService {
+    + IdentityService(userManager:UserManager<ApplicationUser>, userClaimsPrincipalFactory:IUserClaimsPrincipalFactory<ApplicationUser>, authorizationService:IAuthorizationService)
+    + <<async>> GetUserNameAsync(userId:string) : Task<string?>
+    + <<async>> CreateUserAsync(userName:string, password:string) : Task<(Result Result, string UserId)>
+    + <<async>> IsInRoleAsync(userId:string, role:string) : Task<bool>
+    + <<async>> AuthorizeAsync(userId:string, policyName:string) : Task<bool>
+    + <<async>> DeleteUserAsync(userId:string) : Task<Result>
+    + <<async>> DeleteUserAsync(user:ApplicationUser) : Task<Result>
+}
+class "UserManager`1"<T> {
+}
+class "IUserClaimsPrincipalFactory`1"<T> {
+}
+IIdentityService <|-- IdentityService
+IdentityService --> "_userManager<ApplicationUser>" "UserManager`1"
+IdentityService --> "_userClaimsPrincipalFactory<ApplicationUser>" "IUserClaimsPrincipalFactory`1"
+IdentityService --> "_authorizationService" IAuthorizationService
+class TodoItems {
+    + <<override>> Map(app:WebApplication) : void
+    + <<async>> GetTodoItemsWithPagination(sender:ISender, query:GetTodoItemsWithPaginationQuery) : Task<Ok<PaginatedList<TodoItemBriefDto>>>
+    + <<async>> CreateTodoItem(sender:ISender, command:CreateTodoItemCommand) : Task<Created<int>>
+    + <<async>> UpdateTodoItem(sender:ISender, id:int, command:UpdateTodoItemCommand) : Task<Results<NoContent, BadRequest>>
+    + <<async>> UpdateTodoItemDetail(sender:ISender, id:int, command:UpdateTodoItemDetailCommand) : Task<Results<NoContent, BadRequest>>
+    + <<async>> DeleteTodoItem(sender:ISender, id:int) : Task<NoContent>
+}
+EndpointGroupBase <|-- TodoItems
+class TodoLists {
+    + <<override>> Map(app:WebApplication) : void
+    + <<async>> GetTodoLists(sender:ISender) : Task<Ok<TodosVm>>
+    + <<async>> CreateTodoList(sender:ISender, command:CreateTodoListCommand) : Task<Created<int>>
+    + <<async>> UpdateTodoList(sender:ISender, id:int, command:UpdateTodoListCommand) : Task<Results<NoContent, BadRequest>>
+    + <<async>> DeleteTodoList(sender:ISender, id:int) : Task<NoContent>
+}
+EndpointGroupBase <|-- TodoLists
+class WeatherForecasts {
+    + <<override>> Map(app:WebApplication) : void
+    + <<async>> GetWeatherForecasts(sender:ISender) : Task<Ok<IEnumerable<WeatherForecast>>>
+}
+EndpointGroupBase <|-- WeatherForecasts
+class CustomExceptionHandler {
+    + CustomExceptionHandler()
+    + <<async>> TryHandleAsync(httpContext:HttpContext, exception:Exception, cancellationToken:CancellationToken) : ValueTask<bool>
+    - <<async>> HandleValidationException(httpContext:HttpContext, ex:Exception) : Task
+    - <<async>> HandleNotFoundException(httpContext:HttpContext, ex:Exception) : Task
+    - <<async>> HandleUnauthorizedAccessException(httpContext:HttpContext, ex:Exception) : Task
+    - <<async>> HandleForbiddenAccessException(httpContext:HttpContext, ex:Exception) : Task
+}
+class "Dictionary`2"<T1,T2> {
+}
+IExceptionHandler <|-- CustomExceptionHandler
+CustomExceptionHandler --> "_exceptionHandlers<Type,Func<HttpContext, Exception, Task>>" "Dictionary`2"
+abstract class EndpointGroupBase {
+    + {abstract} Map(app:WebApplication) : void
+}
+class IEndpointRouteBuilderExtensions <<static>> {
+    + {static} MapGet(builder:IEndpointRouteBuilder, handler:Delegate, pattern:string) : IEndpointRouteBuilder
+    + {static} MapPost(builder:IEndpointRouteBuilder, handler:Delegate, pattern:string) : IEndpointRouteBuilder
+    + {static} MapPut(builder:IEndpointRouteBuilder, handler:Delegate, pattern:string) : IEndpointRouteBuilder
+    + {static} MapDelete(builder:IEndpointRouteBuilder, handler:Delegate, pattern:string) : IEndpointRouteBuilder
+}
+class MethodInfoExtensions <<static>> {
+    + {static} IsAnonymous(method:MethodInfo) : bool
+    + {static} AnonymousMethod(guardClause:IGuardClause, input:Delegate) : void
+}
+class WebApplicationExtensions <<static>> {
+    + {static} MapGroup(app:WebApplication, group:EndpointGroupBase) : RouteGroupBuilder
+    + {static} MapEndpoints(app:WebApplication) : WebApplication
+}
+class ErrorModel {
+    + ErrorModel(logger:ILogger<ErrorModel>)
+    + RequestId : string? <<get>> <<set>>
+    + ShowRequestId : bool <<get>>
+    + OnGet() : void
+}
+class "ILogger`1"<T> {
+}
+PageModel <|-- ErrorModel
+ErrorModel --> "_logger<ErrorModel>" "ILogger`1"
+class CurrentUser {
+    + CurrentUser(httpContextAccessor:IHttpContextAccessor)
+    + Id : string? <<get>>
+}
+IUser <|-- CurrentUser
+CurrentUser --> "_httpContextAccessor" IHttpContextAccessor
+class ColourTests {
+    + ShouldReturnCorrectColourCode() : void
+    + ToStringReturnsCode() : void
+    + ShouldPerformImplicitConversionToColourCodeString() : void
+    + ShouldPerformExplicitConversionGivenSupportedColourCode() : void
+    + ShouldThrowUnsupportedColourExceptionGivenNotSupportedColourCode() : void
+}
+class LoginFeature <<partial>> {
+    + <<virtual>> FeatureSetup() : void
+    + <<virtual>> FeatureTearDown() : void
+    + TestInitialize() : void
+    + TestTearDown() : void
+    + ScenarioInitialize(scenarioInfo:TechTalk.SpecFlow.ScenarioInfo) : void
+    + ScenarioStart() : void
+    + ScenarioCleanup() : void
+    + UserCanLogInWithValidCredentials() : void
+    + UserCannotLogInWithInvalidCredentials() : void
+}
+abstract class BasePage {
+    + {static} BaseUrl : string <<get>>
+    + {abstract} PagePath : string <<get>>
+    + <<async>> GotoAsync() : Task
+}
+BasePage --> "Browser" IBrowser
+BasePage --> "Page" IPage
+class LoginPage {
+    + LoginPage(browser:IBrowser, page:IPage)
+    + <<override>> PagePath : string <<get>>
+    + SetEmail(email:string) : Task
+    + SetPassword(password:string) : Task
+    + ClickLogin() : Task
+    + ProfileLinkText() : Task<string?>
+    + InvalidLoginAttemptMessageVisible() : Task<bool>
+}
+BasePage <|-- LoginPage
+LoginPage --> "Browser" IBrowser
+LoginPage --> "Page" IPage
+class LoginStepDefinitions <<sealed>> {
+    + LoginStepDefinitions(loginPage:LoginPage)
+    + {static} <<async>> BeforeLoginScenario(container:IObjectContainer) : Task
+    + <<async>> GivenALoggedOutUser() : Task
+    + <<async>> TheUserLogsInWithValidCredentials() : Task
+    + <<async>> TheyLogInSuccessfully() : Task
+    + <<async>> TheUserLogsInWithInvalidCredentials() : Task
+    + <<async>> AnErrorIsDisplayed() : Task
+    + {static} <<async>> AfterScenario(container:IObjectContainer) : Task
+}
+LoginStepDefinitions --> "_loginPage" LoginPage
+class "AuthorizationBehaviour`2"<TRequest,TResponse> {
+    + AuthorizationBehaviour(user:IUser, identityService:IIdentityService)
+    + <<async>> Handle(request:TRequest, next:RequestHandlerDelegate<TResponse>, cancellationToken:CancellationToken) : Task<TResponse>
+}
+class "IPipelineBehavior`2"<T1,T2> {
+}
+"IPipelineBehavior`2" "<TRequest,TResponse>" <|-- "AuthorizationBehaviour`2"
+"AuthorizationBehaviour`2" --> "_user" IUser
+"AuthorizationBehaviour`2" --> "_identityService" IIdentityService
+class "LoggingBehaviour`1"<TRequest> {
+    + LoggingBehaviour(logger:ILogger<TRequest>, user:IUser, identityService:IIdentityService)
+    + <<async>> Process(request:TRequest, cancellationToken:CancellationToken) : Task
+}
+class "IRequestPreProcessor`1"<T> {
+}
+"IRequestPreProcessor`1" "<TRequest>" <|-- "LoggingBehaviour`1"
+"LoggingBehaviour`1" --> "_logger" ILogger
+"LoggingBehaviour`1" --> "_user" IUser
+"LoggingBehaviour`1" --> "_identityService" IIdentityService
+class "PerformanceBehaviour`2"<TRequest,TResponse> {
+    + PerformanceBehaviour(logger:ILogger<TRequest>, user:IUser, identityService:IIdentityService)
+    + <<async>> Handle(request:TRequest, next:RequestHandlerDelegate<TResponse>, cancellationToken:CancellationToken) : Task<TResponse>
+}
+class "IPipelineBehavior`2"<T1,T2> {
+}
+class "ILogger`1"<T> {
+}
+"IPipelineBehavior`2" "<TRequest,TResponse>" <|-- "PerformanceBehaviour`2"
+"PerformanceBehaviour`2" --> "_timer" Stopwatch
+"PerformanceBehaviour`2" --> "_logger<TRequest>" "ILogger`1"
+"PerformanceBehaviour`2" --> "_user" IUser
+"PerformanceBehaviour`2" --> "_identityService" IIdentityService
+class "UnhandledExceptionBehaviour`2"<TRequest,TResponse> {
+    + UnhandledExceptionBehaviour(logger:ILogger<TRequest>)
+    + <<async>> Handle(request:TRequest, next:RequestHandlerDelegate<TResponse>, cancellationToken:CancellationToken) : Task<TResponse>
+}
+class "IPipelineBehavior`2"<T1,T2> {
+}
+class "ILogger`1"<T> {
+}
+"IPipelineBehavior`2" "<TRequest,TResponse>" <|-- "UnhandledExceptionBehaviour`2"
+"UnhandledExceptionBehaviour`2" --> "_logger<TRequest>" "ILogger`1"
+class "ValidationBehaviour`2"<TRequest,TResponse> {
+    + ValidationBehaviour(validators:IEnumerable<IValidator<TRequest>>)
+    + <<async>> Handle(request:TRequest, next:RequestHandlerDelegate<TResponse>, cancellationToken:CancellationToken) : Task<TResponse>
+}
+class "IPipelineBehavior`2"<T1,T2> {
+}
+class "IEnumerable`1"<T> {
+}
+"IPipelineBehavior`2" "<TRequest,TResponse>" <|-- "ValidationBehaviour`2"
+"ValidationBehaviour`2" --> "_validators<IValidator<TRequest>>" "IEnumerable`1"
+class ForbiddenAccessException {
+    + ForbiddenAccessException()
+}
+Exception <|-- ForbiddenAccessException
+class ValidationException {
+    + ValidationException()
+    + ValidationException(failures:IEnumerable<ValidationFailure>)
+}
+class "IDictionary`2"<T1,T2> {
+}
+Exception <|-- ValidationException
+ValidationException --> "Errors<string,string[]>" "IDictionary`2"
+interface IApplicationDbContext {
+    SaveChangesAsync(cancellationToken:CancellationToken) : Task<int>
+}
+class "DbSet`1"<T> {
+}
+IApplicationDbContext --> "TodoLists<TodoList>" "DbSet`1"
+IApplicationDbContext --> "TodoItems<TodoItem>" "DbSet`1"
+interface IIdentityService {
+    GetUserNameAsync(userId:string) : Task<string?>
+    IsInRoleAsync(userId:string, role:string) : Task<bool>
+    AuthorizeAsync(userId:string, policyName:string) : Task<bool>
+    CreateUserAsync(userName:string, password:string) : Task<(Result Result, string UserId)>
+    DeleteUserAsync(userId:string) : Task<Result>
+}
+interface IUser {
+    Id : string? <<get>>
+}
+class MappingExtensions <<static>> {
+    + {static} PaginatedListAsync(queryable:IQueryable<TDestination>, pageNumber:int, pageSize:int, cancellationToken:CancellationToken) : Task<PaginatedList<TDestination>>
+    + {static} ProjectToListAsync(queryable:IQueryable, configuration:IConfigurationProvider, cancellationToken:CancellationToken) : Task<List<TDestination>>
+}
+class LookupDto {
+    + Id : int <<get>> <<init>>
+    + Title : string? <<get>> <<init>>
+}
+class Mapping {
+    + Mapping()
+}
+LookupDto +-- Mapping
+Profile <|-- Mapping
+class "PaginatedList`1"<T> {
+    + PageNumber : int <<get>>
+    + TotalPages : int <<get>>
+    + TotalCount : int <<get>>
+    + PaginatedList(items:IReadOnlyCollection<T>, count:int, pageNumber:int, pageSize:int)
+    + HasPreviousPage : bool <<get>>
+    + HasNextPage : bool <<get>>
+    + {static} <<async>> CreateAsync(source:IQueryable<T>, pageNumber:int, pageSize:int, cancellationToken:CancellationToken) : Task<PaginatedList<T>>
+}
+class "IReadOnlyCollection`1"<T> {
+}
+"PaginatedList`1" --> "Items<T>" "IReadOnlyCollection`1"
+class Result {
+    <<internal>> Result(succeeded:bool, errors:IEnumerable<string>)
+    + Succeeded : bool <<get>> <<init>>
+    + {static} Success() : Result
+    + {static} Failure(errors:IEnumerable<string>) : Result
+}
+class AuthorizeAttribute {
+    + AuthorizeAttribute()
+    + Roles : string <<get>> <<set>>
+    + Policy : string <<get>> <<set>>
+}
+Attribute <|-- AuthorizeAttribute
+class TodoItemCompletedEventHandler {
+    + TodoItemCompletedEventHandler(logger:ILogger<TodoItemCompletedEventHandler>)
+    + Handle(notification:TodoItemCompletedEvent, cancellationToken:CancellationToken) : Task
+}
+class "INotificationHandler`1"<T> {
+}
+class "ILogger`1"<T> {
+}
+"INotificationHandler`1" "<TodoItemCompletedEvent>" <|-- TodoItemCompletedEventHandler
+TodoItemCompletedEventHandler --> "_logger<TodoItemCompletedEventHandler>" "ILogger`1"
+class TodoItemCreatedEventHandler {
+    + TodoItemCreatedEventHandler(logger:ILogger<TodoItemCreatedEventHandler>)
+    + Handle(notification:TodoItemCreatedEvent, cancellationToken:CancellationToken) : Task
+}
+class "INotificationHandler`1"<T> {
+}
+class "ILogger`1"<T> {
+}
+"INotificationHandler`1" "<TodoItemCreatedEvent>" <|-- TodoItemCreatedEventHandler
+TodoItemCreatedEventHandler --> "_logger<TodoItemCreatedEventHandler>" "ILogger`1"
+class TodoItemConfiguration {
+    + Configure(builder:EntityTypeBuilder<TodoItem>) : void
+}
+class "IEntityTypeConfiguration`1"<T> {
+}
+"IEntityTypeConfiguration`1" "<TodoItem>" <|-- TodoItemConfiguration
+class TodoListConfiguration {
+    + Configure(builder:EntityTypeBuilder<TodoList>) : void
+}
+class "IEntityTypeConfiguration`1"<T> {
+}
+"IEntityTypeConfiguration`1" "<TodoList>" <|-- TodoListConfiguration
+class AuditableEntityInterceptor {
+    + AuditableEntityInterceptor(user:IUser, dateTime:TimeProvider)
+    + <<override>> SavingChanges(eventData:DbContextEventData, result:InterceptionResult<int>) : InterceptionResult<int>
+    + <<override>> SavingChangesAsync(eventData:DbContextEventData, result:InterceptionResult<int>, cancellationToken:CancellationToken) : ValueTask<InterceptionResult<int>>
+    + UpdateEntities(context:DbContext?) : void
+}
+class Extensions <<static>> {
+    + {static} HasChangedOwnedEntities(entry:EntityEntry) : bool
+}
+SaveChangesInterceptor <|-- AuditableEntityInterceptor
+AuditableEntityInterceptor --> "_user" IUser
+AuditableEntityInterceptor --> "_dateTime" TimeProvider
+class DispatchDomainEventsInterceptor {
+    + DispatchDomainEventsInterceptor(mediator:IMediator)
+    + <<override>> SavingChanges(eventData:DbContextEventData, result:InterceptionResult<int>) : InterceptionResult<int>
+    + <<override>> <<async>> SavingChangesAsync(eventData:DbContextEventData, result:InterceptionResult<int>, cancellationToken:CancellationToken) : ValueTask<InterceptionResult<int>>
+    + <<async>> DispatchDomainEvents(context:DbContext?) : Task
+}
+SaveChangesInterceptor <|-- DispatchDomainEventsInterceptor
+DispatchDomainEventsInterceptor --> "_mediator" IMediator
+class InitialCreate <<partial>> {
+    # <<override>> Up(migrationBuilder:MigrationBuilder) : void
+    # <<override>> Down(migrationBuilder:MigrationBuilder) : void
+}
+Migration <|-- InitialCreate
+class InitialCreate <<partial>> {
+    # <<override>> BuildTargetModel(modelBuilder:ModelBuilder) : void
+}
+class ApplicationDbContextModelSnapshot <<partial>> {
+    # <<override>> BuildModel(modelBuilder:ModelBuilder) : void
+}
+ModelSnapshot <|-- ApplicationDbContextModelSnapshot
+class CreateTodoItemTests {
+    + <<async>> ShouldRequireMinimumFields() : Task
+    + <<async>> ShouldCreateTodoItem() : Task
+}
+BaseTestFixture <|-- CreateTodoItemTests
+class DeleteTodoItemTests {
+    + <<async>> ShouldRequireValidTodoItemId() : Task
+    + <<async>> ShouldDeleteTodoItem() : Task
+}
+BaseTestFixture <|-- DeleteTodoItemTests
+class UpdateTodoItemDetailTests {
+    + <<async>> ShouldRequireValidTodoItemId() : Task
+    + <<async>> ShouldUpdateTodoItem() : Task
+}
+BaseTestFixture <|-- UpdateTodoItemDetailTests
+class UpdateTodoItemTests {
+    + <<async>> ShouldRequireValidTodoItemId() : Task
+    + <<async>> ShouldUpdateTodoItem() : Task
+}
+BaseTestFixture <|-- UpdateTodoItemTests
+class CreateTodoListTests {
+    + <<async>> ShouldRequireMinimumFields() : Task
+    + <<async>> ShouldRequireUniqueTitle() : Task
+    + <<async>> ShouldCreateTodoList() : Task
+}
+BaseTestFixture <|-- CreateTodoListTests
+class DeleteTodoListTests {
+    + <<async>> ShouldRequireValidTodoListId() : Task
+    + <<async>> ShouldDeleteTodoList() : Task
+}
+BaseTestFixture <|-- DeleteTodoListTests
+class PurgeTodoListsTests {
+    + <<async>> ShouldDenyAnonymousUser() : Task
+    + <<async>> ShouldDenyNonAdministrator() : Task
+    + <<async>> ShouldAllowAdministrator() : Task
+    + <<async>> ShouldDeleteAllLists() : Task
+}
+BaseTestFixture <|-- PurgeTodoListsTests
+class UpdateTodoListTests {
+    + <<async>> ShouldRequireValidTodoListId() : Task
+    + <<async>> ShouldRequireUniqueTitle() : Task
+    + <<async>> ShouldUpdateTodoList() : Task
+}
+BaseTestFixture <|-- UpdateTodoListTests
+class GetTodosTests {
+    + <<async>> ShouldReturnPriorityLevels() : Task
+    + <<async>> ShouldReturnAllListsAndItems() : Task
+    + <<async>> ShouldDenyAnonymousUser() : Task
+}
+BaseTestFixture <|-- GetTodosTests
+class RequestLoggerTests {
+    + Setup() : void
+    + <<async>> ShouldCallGetUserNameAsyncOnceIfAuthenticated() : Task
+    + <<async>> ShouldNotCallGetUserNameAsyncOnceIfUnauthenticated() : Task
+}
+class "Mock`1"<T> {
+}
+RequestLoggerTests o-> "_logger<ILogger<CreateTodoItemCommand>>" "Mock`1"
+RequestLoggerTests o-> "_user<IUser>" "Mock`1"
+RequestLoggerTests o-> "_identityService<IIdentityService>" "Mock`1"
+class ValidationExceptionTests {
+    + DefaultConstructorCreatesAnEmptyErrorDictionary() : void
+    + SingleValidationFailureCreatesASingleElementErrorDictionary() : void
+    + MulitpleValidationFailureForMultiplePropertiesCreatesAMultipleElementErrorDictionaryEachWithMultipleValues() : void
+}
+class MappingTests {
+    + MappingTests()
+    + ShouldHaveValidConfiguration() : void
+    + ShouldSupportMappingFromSourceToDestination(source:Type, destination:Type) : void
+    - GetInstanceOf(type:Type) : object
+}
+MappingTests --> "_configuration" IConfigurationProvider
+MappingTests --> "_mapper" IMapper
+class CreateTodoItemCommand <<record>> {
+    + ListId : int <<get>> <<init>>
+    + Title : string? <<get>> <<init>>
+}
+class CreateTodoItemCommandHandler {
+    + CreateTodoItemCommandHandler(context:IApplicationDbContext)
+    + <<async>> Handle(request:CreateTodoItemCommand, cancellationToken:CancellationToken) : Task<int>
+}
+class "IRequest`1"<T> {
+}
+class "IRequestHandler`2"<T1,T2> {
+}
+"IRequest`1" "<int>" <|-- CreateTodoItemCommand
+"IRequestHandler`2" "<CreateTodoItemCommand,int>" <|-- CreateTodoItemCommandHandler
+CreateTodoItemCommandHandler --> "_context" IApplicationDbContext
+class CreateTodoItemCommandValidator {
+    + CreateTodoItemCommandValidator()
+}
+class "AbstractValidator`1"<T> {
+}
+"AbstractValidator`1" "<CreateTodoItemCommand>" <|-- CreateTodoItemCommandValidator
+class DeleteTodoItemCommand <<record>> {
+    + Id : int <<get>> <<init>>
+}
+class DeleteTodoItemCommandHandler {
+    + DeleteTodoItemCommandHandler(context:IApplicationDbContext)
+    + <<async>> Handle(request:DeleteTodoItemCommand, cancellationToken:CancellationToken) : Task
+}
+class "IRequestHandler`1"<T> {
+}
+IRequest <|-- DeleteTodoItemCommand
+"IRequestHandler`1" "<DeleteTodoItemCommand>" <|-- DeleteTodoItemCommandHandler
+DeleteTodoItemCommandHandler --> "_context" IApplicationDbContext
+class UpdateTodoItemCommand <<record>> {
+    + Id : int <<get>> <<init>>
+    + Title : string? <<get>> <<init>>
+    + Done : bool <<get>> <<init>>
+}
+class UpdateTodoItemCommandHandler {
+    + UpdateTodoItemCommandHandler(context:IApplicationDbContext)
+    + <<async>> Handle(request:UpdateTodoItemCommand, cancellationToken:CancellationToken) : Task
+}
+class "IRequestHandler`1"<T> {
+}
+IRequest <|-- UpdateTodoItemCommand
+"IRequestHandler`1" "<UpdateTodoItemCommand>" <|-- UpdateTodoItemCommandHandler
+UpdateTodoItemCommandHandler --> "_context" IApplicationDbContext
+class UpdateTodoItemCommandValidator {
+    + UpdateTodoItemCommandValidator()
+}
+class "AbstractValidator`1"<T> {
+}
+"AbstractValidator`1" "<UpdateTodoItemCommand>" <|-- UpdateTodoItemCommandValidator
+class UpdateTodoItemDetailCommand <<record>> {
+    + Id : int <<get>> <<init>>
+    + ListId : int <<get>> <<init>>
+    + Note : string? <<get>> <<init>>
+}
+class UpdateTodoItemDetailCommandHandler {
+    + UpdateTodoItemDetailCommandHandler(context:IApplicationDbContext)
+    + <<async>> Handle(request:UpdateTodoItemDetailCommand, cancellationToken:CancellationToken) : Task
+}
+class "IRequestHandler`1"<T> {
+}
+IRequest <|-- UpdateTodoItemDetailCommand
+UpdateTodoItemDetailCommand --> "Priority" PriorityLevel
+"IRequestHandler`1" "<UpdateTodoItemDetailCommand>" <|-- UpdateTodoItemDetailCommandHandler
+UpdateTodoItemDetailCommandHandler --> "_context" IApplicationDbContext
+class GetTodoItemsWithPaginationQuery <<record>> {
+    + ListId : int <<get>> <<init>>
+    + PageNumber : int <<get>> <<init>> = 1
+    + PageSize : int <<get>> <<init>> = 10
+}
+class GetTodoItemsWithPaginationQueryHandler {
+    + GetTodoItemsWithPaginationQueryHandler(context:IApplicationDbContext, mapper:IMapper)
+    + <<async>> Handle(request:GetTodoItemsWithPaginationQuery, cancellationToken:CancellationToken) : Task<PaginatedList<TodoItemBriefDto>>
+}
+class "IRequest`1"<T> {
+}
+class "IRequestHandler`2"<T1,T2> {
+}
+"IRequest`1" "<PaginatedList<TodoItemBriefDto>>" <|-- GetTodoItemsWithPaginationQuery
+"IRequestHandler`2" "<GetTodoItemsWithPaginationQuery,PaginatedList<TodoItemBriefDto>>" <|-- GetTodoItemsWithPaginationQueryHandler
+GetTodoItemsWithPaginationQueryHandler --> "_context" IApplicationDbContext
+GetTodoItemsWithPaginationQueryHandler --> "_mapper" IMapper
+class GetTodoItemsWithPaginationQueryValidator {
+    + GetTodoItemsWithPaginationQueryValidator()
+}
+class "AbstractValidator`1"<T> {
+}
+"AbstractValidator`1" "<GetTodoItemsWithPaginationQuery>" <|-- GetTodoItemsWithPaginationQueryValidator
+class TodoItemBriefDto {
+    + Id : int <<get>> <<init>>
+    + ListId : int <<get>> <<init>>
+    + Title : string? <<get>> <<init>>
+    + Done : bool <<get>> <<init>>
+}
+class Mapping {
+    + Mapping()
+}
+TodoItemBriefDto +-- Mapping
+Profile <|-- Mapping
+class CreateTodoListCommand <<record>> {
+    + Title : string? <<get>> <<init>>
+}
+class CreateTodoListCommandHandler {
+    + CreateTodoListCommandHandler(context:IApplicationDbContext)
+    + <<async>> Handle(request:CreateTodoListCommand, cancellationToken:CancellationToken) : Task<int>
+}
+class "IRequest`1"<T> {
+}
+class "IRequestHandler`2"<T1,T2> {
+}
+"IRequest`1" "<int>" <|-- CreateTodoListCommand
+"IRequestHandler`2" "<CreateTodoListCommand,int>" <|-- CreateTodoListCommandHandler
+CreateTodoListCommandHandler --> "_context" IApplicationDbContext
+class CreateTodoListCommandValidator {
+    + CreateTodoListCommandValidator(context:IApplicationDbContext)
+    + <<async>> BeUniqueTitle(title:string, cancellationToken:CancellationToken) : Task<bool>
+}
+class "AbstractValidator`1"<T> {
+}
+"AbstractValidator`1" "<CreateTodoListCommand>" <|-- CreateTodoListCommandValidator
+CreateTodoListCommandValidator --> "_context" IApplicationDbContext
+class DeleteTodoListCommand <<record>> {
+    + Id : int <<get>> <<init>>
+}
+class DeleteTodoListCommandHandler {
+    + DeleteTodoListCommandHandler(context:IApplicationDbContext)
+    + <<async>> Handle(request:DeleteTodoListCommand, cancellationToken:CancellationToken) : Task
+}
+class "IRequestHandler`1"<T> {
+}
+IRequest <|-- DeleteTodoListCommand
+"IRequestHandler`1" "<DeleteTodoListCommand>" <|-- DeleteTodoListCommandHandler
+DeleteTodoListCommandHandler --> "_context" IApplicationDbContext
+class PurgeTodoListsCommand <<record>> {
+}
+class PurgeTodoListsCommandHandler {
+    + PurgeTodoListsCommandHandler(context:IApplicationDbContext)
+    + <<async>> Handle(request:PurgeTodoListsCommand, cancellationToken:CancellationToken) : Task
+}
+class "IRequestHandler`1"<T> {
+}
+IRequest <|-- PurgeTodoListsCommand
+"IRequestHandler`1" "<PurgeTodoListsCommand>" <|-- PurgeTodoListsCommandHandler
+PurgeTodoListsCommandHandler --> "_context" IApplicationDbContext
+class UpdateTodoListCommand <<record>> {
+    + Id : int <<get>> <<init>>
+    + Title : string? <<get>> <<init>>
+}
+class UpdateTodoListCommandHandler {
+    + UpdateTodoListCommandHandler(context:IApplicationDbContext)
+    + <<async>> Handle(request:UpdateTodoListCommand, cancellationToken:CancellationToken) : Task
+}
+class "IRequestHandler`1"<T> {
+}
+IRequest <|-- UpdateTodoListCommand
+"IRequestHandler`1" "<UpdateTodoListCommand>" <|-- UpdateTodoListCommandHandler
+UpdateTodoListCommandHandler --> "_context" IApplicationDbContext
+class UpdateTodoListCommandValidator {
+    + UpdateTodoListCommandValidator(context:IApplicationDbContext)
+    + <<async>> BeUniqueTitle(model:UpdateTodoListCommand, title:string, cancellationToken:CancellationToken) : Task<bool>
+}
+class "AbstractValidator`1"<T> {
+}
+"AbstractValidator`1" "<UpdateTodoListCommand>" <|-- UpdateTodoListCommandValidator
+UpdateTodoListCommandValidator --> "_context" IApplicationDbContext
+class GetTodosQuery <<record>> {
+}
+class GetTodosQueryHandler {
+    + GetTodosQueryHandler(context:IApplicationDbContext, mapper:IMapper)
+    + <<async>> Handle(request:GetTodosQuery, cancellationToken:CancellationToken) : Task<TodosVm>
+}
+class "IRequest`1"<T> {
+}
+class "IRequestHandler`2"<T1,T2> {
+}
+"IRequest`1" "<TodosVm>" <|-- GetTodosQuery
+"IRequestHandler`2" "<GetTodosQuery,TodosVm>" <|-- GetTodosQueryHandler
+GetTodosQueryHandler --> "_context" IApplicationDbContext
+GetTodosQueryHandler --> "_mapper" IMapper
+class TodoItemDto {
+    + Id : int <<get>> <<init>>
+    + ListId : int <<get>> <<init>>
+    + Title : string? <<get>> <<init>>
+    + Done : bool <<get>> <<init>>
+    + Priority : int <<get>> <<init>>
+    + Note : string? <<get>> <<init>>
+}
+class Mapping {
+    + Mapping()
+}
+TodoItemDto +-- Mapping
+Profile <|-- Mapping
+class TodoListDto {
+    + TodoListDto()
+    + Id : int <<get>> <<init>>
+    + Title : string? <<get>> <<init>>
+    + Colour : string? <<get>> <<init>>
+}
+class "IReadOnlyCollection`1"<T> {
+}
+class Mapping {
+    + Mapping()
+}
+TodoListDto --> "Items<TodoItemDto>" "IReadOnlyCollection`1"
+TodoListDto +-- Mapping
+Profile <|-- Mapping
+class TodosVm {
+}
+class "IReadOnlyCollection`1"<T> {
+}
+TodosVm o-> "PriorityLevels<LookupDto>" "IReadOnlyCollection`1"
+TodosVm o-> "Lists<TodoListDto>" "IReadOnlyCollection`1"
+class GetWeatherForecastsQuery <<record>> {
+}
+class GetWeatherForecastsQueryHandler {
+    + <<async>> Handle(request:GetWeatherForecastsQuery, cancellationToken:CancellationToken) : Task<IEnumerable<WeatherForecast>>
+}
+class "IRequest`1"<T> {
+}
+class "IRequestHandler`2"<T1,T2> {
+}
+"IRequest`1" "<IEnumerable<WeatherForecast>>" <|-- GetWeatherForecastsQuery
+"IRequestHandler`2" "<GetWeatherForecastsQuery,IEnumerable<WeatherForecast>>" <|-- GetWeatherForecastsQueryHandler
+class WeatherForecast {
+    + TemperatureC : int <<get>> <<init>>
+    + TemperatureF : int <<get>>
+    + Summary : string? <<get>> <<init>>
+}
+WeatherForecast --> "Date" DateTime
+
+' ===== EMPLOYEE MANAGEMENT ENTITIES =====
+abstract class Person {
+    + FirstName : string <<get>> <<set>>
+    + LastName : string <<get>> <<set>>
+    + Email : string <<get>> <<set>>
+    + Phone : string? <<get>> <<set>>
+    + Address : string? <<get>> <<set>>
+    + FullName : string <<get>>
+}
+BaseAuditableEntity <|-- Person
+Person --> "DateOfBirth" DateTime
+
+class Employee {
+    + EmployeeNumber : string <<get>> <<set>>
+    + HireDate : DateTime <<get>> <<set>>
+    + Salary : decimal <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+    + TerminationDate : DateTime? <<get>> <<set>>
+    + TerminationReason : string? <<get>> <<set>>
+}
+Person <|-- Employee
+Employee --> "Status" EmployeeStatus
+Employee --> "Department" Department
+Employee --> "Position" Position
+Employee --> "Manager" Employee
+
+enum EmployeeStatus {
+    Active = 0,
+    Inactive = 1,
+    OnLeave = 2,
+    Suspended = 3,
+    Terminated = 4
+}
+
+class Department {
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + Budget : decimal <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- Department
+Department --> "Manager" Employee
+
+class Position {
+    + Title : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + MinSalary : decimal <<get>> <<set>>
+    + MaxSalary : decimal <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- Position
+Position --> "Department" Department
+
+' ===== ACCESS CONTROL ENTITIES =====
+class AccessRole {
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- AccessRole
+
+class Permission {
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + Resource : string <<get>> <<set>>
+    + Action : string <<get>> <<set>>
+}
+BaseAuditableEntity <|-- Permission
+
+class RolePermission {
+    + RoleId : int <<get>> <<set>>
+    + PermissionId : int <<get>> <<set>>
+}
+BaseAuditableEntity <|-- RolePermission
+RolePermission --> "Role" AccessRole
+RolePermission --> "Permission" Permission
+
+class EmployeeRole {
+    + EmployeeId : int <<get>> <<set>>
+    + RoleId : int <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- EmployeeRole
+EmployeeRole --> "Employee" Employee
+EmployeeRole --> "Role" AccessRole
+EmployeeRole --> "GrantedDate" DateTime
+EmployeeRole --> "RevokedDate" DateTime
+
+class AccessLog {
+    + EmployeeId : int <<get>> <<set>>
+    + Resource : string <<get>> <<set>>
+    + Action : string <<get>> <<set>>
+    + Success : bool <<get>> <<set>>
+    + IpAddress : string? <<get>> <<set>>
+    + UserAgent : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- AccessLog
+AccessLog --> "Employee" Employee
+AccessLog --> "AccessDate" DateTime
+
+' ===== APPROVAL WORKFLOW ENTITIES =====
+class ApprovalWorkflow {
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + EntityType : string <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- ApprovalWorkflow
+
+class ApprovalStep {
+    + WorkflowId : int <<get>> <<set>>
+    + StepOrder : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + RequiredApprovals : int <<get>> <<set>> = 1
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- ApprovalStep
+ApprovalStep --> "Workflow" ApprovalWorkflow
+ApprovalStep --> "ApproverRole" AccessRole
+
+class ApprovalRequest {
+    + WorkflowId : int <<get>> <<set>>
+    + EntityId : int <<get>> <<set>>
+    + EntityType : string <<get>> <<set>>
+    + RequesterId : int <<get>> <<set>>
+    + RequestReason : string? <<get>> <<set>>
+    + RequestData : string <<get>> <<set>>
+    + CurrentStepId : int? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- ApprovalRequest
+ApprovalRequest --> "Status" ApprovalStatus
+ApprovalRequest --> "Workflow" ApprovalWorkflow
+ApprovalRequest --> "Requester" Employee
+ApprovalRequest --> "CurrentStep" ApprovalStep
+ApprovalRequest --> "SubmittedDate" DateTime
+ApprovalRequest --> "CompletedDate" DateTime
+
+enum ApprovalStatus {
+    Pending = 0,
+    InProgress = 1,
+    Approved = 2,
+    Rejected = 3,
+    Cancelled = 4
+}
+
+class ApprovalAction {
+    + RequestId : int <<get>> <<set>>
+    + StepId : int <<get>> <<set>>
+    + ApproverId : int <<get>> <<set>>
+    + Comments : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- ApprovalAction
+ApprovalAction --> "Decision" ApprovalDecision
+ApprovalAction --> "Request" ApprovalRequest
+ApprovalAction --> "Step" ApprovalStep
+ApprovalAction --> "Approver" Employee
+ApprovalAction --> "ActionDate" DateTime
+
+enum ApprovalDecision {
+    Approve = 0,
+    Reject = 1,
+    RequestInfo = 2
+}
+
+' ===== LOGISTICS ENTITIES =====
+class Warehouse {
+    + Name : string <<get>> <<set>>
+    + Code : string <<get>> <<set>>
+    + Address : string <<get>> <<set>>
+    + City : string <<get>> <<set>>
+    + State : string <<get>> <<set>>
+    + ZipCode : string <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- Warehouse
+Warehouse --> "Manager" Employee
+
+class Supplier {
+    + Name : string <<get>> <<set>>
+    + Code : string <<get>> <<set>>
+    + ContactName : string <<get>> <<set>>
+    + Email : string <<get>> <<set>>
+    + Phone : string <<get>> <<set>>
+    + Address : string <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- Supplier
+
+class ProductCategory {
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- ProductCategory
+
+class Inventory {
+    + ProductId : int <<get>> <<set>>
+    + WarehouseId : int <<get>> <<set>>
+    + Quantity : int <<get>> <<set>>
+    + MinimumStock : int <<get>> <<set>>
+    + MaximumStock : int <<get>> <<set>>
+    + ReorderPoint : int <<get>> <<set>>
+    + Location : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- Inventory
+Inventory --> "Product" Product
+Inventory --> "Warehouse" Warehouse
+
+class PurchaseOrder {
+    + OrderNumber : string <<get>> <<set>>
+    + SupplierId : int <<get>> <<set>>
+    + RequestedById : int <<get>> <<set>>
+    + TotalAmount : decimal <<get>> <<set>>
+    + Notes : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- PurchaseOrder
+PurchaseOrder --> "Status" PurchaseOrderStatus
+PurchaseOrder --> "Supplier" Supplier
+PurchaseOrder --> "RequestedBy" Employee
+PurchaseOrder --> "OrderDate" DateTime
+PurchaseOrder --> "ExpectedDeliveryDate" DateTime
+PurchaseOrder --> "ActualDeliveryDate" DateTime
+
+enum PurchaseOrderStatus {
+    Draft = 0,
+    Pending = 1,
+    Approved = 2,
+    Ordered = 3,
+    PartiallyReceived = 4,
+    Received = 5,
+    Cancelled = 6
+}
+
+class PurchaseOrderItem {
+    + PurchaseOrderId : int <<get>> <<set>>
+    + ProductId : int <<get>> <<set>>
+    + Quantity : int <<get>> <<set>>
+    + UnitPrice : decimal <<get>> <<set>>
+    + TotalPrice : decimal <<get>> <<set>>
+    + ReceivedQuantity : int <<get>> <<set>> = 0
+}
+BaseAuditableEntity <|-- PurchaseOrderItem
+PurchaseOrderItem --> "PurchaseOrder" PurchaseOrder
+PurchaseOrderItem --> "Product" Product
+
+class StockMovement {
+    + ProductId : int <<get>> <<set>>
+    + WarehouseId : int <<get>> <<set>>
+    + Quantity : int <<get>> <<set>>
+    + PreviousStock : int <<get>> <<set>>
+    + NewStock : int <<get>> <<set>>
+    + Reference : string? <<get>> <<set>>
+    + Notes : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- StockMovement
+StockMovement --> "Type" MovementType
+StockMovement --> "Product" Product
+StockMovement --> "Warehouse" Warehouse
+StockMovement --> "Employee" Employee
+StockMovement --> "MovementDate" DateTime
+
+enum MovementType {
+    Receipt = 0,
+    Issue = 1,
+    Transfer = 2,
+    Adjustment = 3,
+    Return = 4
+}
+
+class ShipmentOrder {
+    + OrderNumber : string <<get>> <<set>>
+    + CustomerId : int? <<get>> <<set>>
+    + DepartmentId : int? <<get>> <<set>>
+    + WarehouseId : int <<get>> <<set>>
+    + RequestedById : int <<get>> <<set>>
+    + ShippingAddress : string <<get>> <<set>>
+    + TrackingNumber : string? <<get>> <<set>>
+    + Notes : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- ShipmentOrder
+ShipmentOrder --> "Status" ShipmentStatus
+ShipmentOrder --> "Department" Department
+ShipmentOrder --> "Warehouse" Warehouse
+ShipmentOrder --> "RequestedBy" Employee
+ShipmentOrder --> "RequestDate" DateTime
+ShipmentOrder --> "ShippedDate" DateTime
+ShipmentOrder --> "DeliveredDate" DateTime
+
+enum ShipmentStatus {
+    Pending = 0,
+    Approved = 1,
+    Packed = 2,
+    Shipped = 3,
+    InTransit = 4,
+    Delivered = 5,
+    Cancelled = 6
+}
+
+class ShipmentItem {
+    + ShipmentOrderId : int <<get>> <<set>>
+    + ProductId : int <<get>> <<set>>
+    + Quantity : int <<get>> <<set>>
+    + PackedQuantity : int <<get>> <<set>> = 0
+}
+BaseAuditableEntity <|-- ShipmentItem
+ShipmentItem --> "ShipmentOrder" ShipmentOrder
+ShipmentItem --> "Product" Product
+
+' ===== EMPLOYEE STATUS CHANGE ENTITIES =====
+class EmployeeStatusChange {
+    + EmployeeId : int <<get>> <<set>>
+    + PreviousStatus : EmployeeStatus <<get>> <<set>>
+    + NewStatus : EmployeeStatus <<get>> <<set>>
+    + Reason : string <<get>> <<set>>
+    + Comments : string? <<get>> <<set>>
+    + RequestedById : int <<get>> <<set>>
+    + ApprovalRequestId : int? <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- EmployeeStatusChange
+EmployeeStatusChange --> "Employee" Employee
+EmployeeStatusChange --> "RequestedBy" Employee
+EmployeeStatusChange --> "ApprovalRequest" ApprovalRequest
+EmployeeStatusChange --> "EffectiveDate" DateTime
+
+' ===== RELATIONSHIPS =====
+Product --> "Category" ProductCategory
+Product --> "Supplier" Supplier
+
+' ===== WORKPLACE MOVEMENT ENTITIES =====
+class WorkPlace {
+    + Code : string <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + Location : string <<get>> <<set>>
+    + Floor : string? <<get>> <<set>>
+    + Building : string? <<get>> <<set>>
+    + MaxCapacity : int <<get>> <<set>>
+    + CurrentCapacity : int <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+    + RequiresApproval : bool <<get>> <<set>> = false
+}
+BaseAuditableEntity <|-- WorkPlace
+WorkPlace --> "Type" WorkPlaceType
+WorkPlace --> "Department" Department
+WorkPlace --> "Supervisor" Employee
+
+enum WorkPlaceType {
+    Office = 0,
+    Desk = 1,
+    MeetingRoom = 2,
+    Laboratory = 3,
+    Factory = 4,
+    Warehouse = 5,
+    RemoteWork = 6,
+    FieldWork = 7
+}
+
+class WorkPlaceAssignment {
+    + EmployeeId : int <<get>> <<set>>
+    + WorkPlaceId : int <<get>> <<set>>
+    + StartDate : DateTime <<get>> <<set>>
+    + EndDate : DateTime? <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+    + IsPrimary : bool <<get>> <<set>> = true
+    + Notes : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- WorkPlaceAssignment
+WorkPlaceAssignment --> "Employee" Employee
+WorkPlaceAssignment --> "WorkPlace" WorkPlace
+WorkPlaceAssignment --> "AssignmentType" AssignmentType
+
+enum AssignmentType {
+    Permanent = 0,
+    Temporary = 1,
+    Project = 2,
+    Training = 3,
+    Rotation = 4,
+    Backup = 5
+}
+
+class WorkPlaceMovementRequest {
+    + EmployeeId : int <<get>> <<set>>
+    + CurrentWorkPlaceId : int? <<get>> <<set>>
+    + RequestedWorkPlaceId : int <<get>> <<set>>
+    + RequestedById : int <<get>> <<set>>
+    + MovementType : MovementType <<get>> <<set>>
+    + RequestReason : string <<get>> <<set>>
+    + BusinessJustification : string? <<get>> <<set>>
+    + StartDate : DateTime <<get>> <<set>>
+    + EndDate : DateTime? <<get>> <<set>>
+    + ApprovalRequestId : int? <<get>> <<set>>
+    + Notes : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- WorkPlaceMovementRequest
+WorkPlaceMovementRequest --> "Status" WorkPlaceMovementStatus
+WorkPlaceMovementRequest --> "Employee" Employee
+WorkPlaceMovementRequest --> "CurrentWorkPlace" WorkPlace
+WorkPlaceMovementRequest --> "RequestedWorkPlace" WorkPlace
+WorkPlaceMovementRequest --> "RequestedBy" Employee
+WorkPlaceMovementRequest --> "ApprovalRequest" ApprovalRequest
+
+enum WorkPlaceMovementStatus {
+    Draft = 0,
+    Submitted = 1,
+    UnderReview = 2,
+    Approved = 3,
+    Rejected = 4,
+    Scheduled = 5,
+    InProgress = 6,
+    Completed = 7,
+    Cancelled = 8
+}
+
+enum WorkPlaceMovementType {
+    Transfer = 0,
+    Promotion = 1,
+    Rotation = 2,
+    TemporaryAssignment = 3,
+    ProjectAssignment = 4,
+    Return = 5,
+    NewHire = 6,
+    Termination = 7
+}
+
+class WorkPlaceMovementHistory {
+    + EmployeeId : int <<get>> <<set>>
+    + FromWorkPlaceId : int? <<get>> <<set>>
+    + ToWorkPlaceId : int? <<get>> <<set>>
+    + MovementRequestId : int <<get>> <<set>>
+    + MovementType : WorkPlaceMovementType <<get>> <<set>>
+    + MovementReason : string <<get>> <<set>>
+    + EffectiveDate : DateTime <<get>> <<set>>
+    + ProcessedById : int <<get>> <<set>>
+    + Notes : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- WorkPlaceMovementHistory
+WorkPlaceMovementHistory --> "Employee" Employee
+WorkPlaceMovementHistory --> "FromWorkPlace" WorkPlace
+WorkPlaceMovementHistory --> "ToWorkPlace" WorkPlace
+WorkPlaceMovementHistory --> "MovementRequest" WorkPlaceMovementRequest
+WorkPlaceMovementHistory --> "ProcessedBy" Employee
+
+class WorkPlaceSchedule {
+    + WorkPlaceId : int <<get>> <<set>>
+    + EmployeeId : int <<get>> <<set>>
+    + DayOfWeek : int <<get>> <<set>>
+    + StartTime : TimeSpan <<get>> <<set>>
+    + EndTime : TimeSpan <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+    + EffectiveDate : DateTime <<get>> <<set>>
+    + ExpirationDate : DateTime? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- WorkPlaceSchedule
+WorkPlaceSchedule --> "WorkPlace" WorkPlace
+WorkPlaceSchedule --> "Employee" Employee
+WorkPlaceSchedule --> "ScheduleType" ScheduleType
+
+enum ScheduleType {
+    Regular = 0,
+    Flexible = 1,
+    Shift = 2,
+    PartTime = 3,
+    Remote = 4,
+    Hybrid = 5
+}
+
+class WorkPlaceReservation {
+    + WorkPlaceId : int <<get>> <<set>>
+    + EmployeeId : int <<get>> <<set>>
+    + ReservationDate : DateTime <<get>> <<set>>
+    + StartTime : TimeSpan <<get>> <<set>>
+    + EndTime : TimeSpan <<get>> <<set>>
+    + Purpose : string <<get>> <<set>>
+    + Notes : string? <<get>> <<set>>
+    + IsRecurring : bool <<get>> <<set>> = false
+    + RecurrencePattern : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- WorkPlaceReservation
+WorkPlaceReservation --> "Status" ReservationStatus
+WorkPlaceReservation --> "WorkPlace" WorkPlace
+WorkPlaceReservation --> "Employee" Employee
+
+enum ReservationStatus {
+    Pending = 0,
+    Confirmed = 1,
+    CheckedIn = 2,
+    Completed = 3,
+    Cancelled = 4,
+    NoShow = 5
+}
+
+class WorkPlaceCapacityPlan {
+    + WorkPlaceId : int <<get>> <<set>>
+    + PlanDate : DateTime <<get>> <<set>>
+    + PlannedCapacity : int <<get>> <<set>>
+    + ActualCapacity : int <<get>> <<set>>
+    + PlannedById : int <<get>> <<set>>
+    + Notes : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- WorkPlaceCapacityPlan
+WorkPlaceCapacityPlan --> "WorkPlace" WorkPlace
+WorkPlaceCapacityPlan --> "PlannedBy" Employee
+
+class WorkPlaceEquipment {
+    + WorkPlaceId : int <<get>> <<set>>
+    + EquipmentCode : string <<get>> <<set>>
+    + EquipmentName : string <<get>> <<set>>
+    + EquipmentType : string <<get>> <<set>>
+    + SerialNumber : string? <<get>> <<set>>
+    + PurchaseDate : DateTime? <<get>> <<set>>
+    + WarrantyExpiry : DateTime? <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+BaseAuditableEntity <|-- WorkPlaceEquipment
+WorkPlaceEquipment --> "WorkPlace" WorkPlace
+WorkPlaceEquipment --> "Status" EquipmentStatus
+
+enum EquipmentStatus {
+    Available = 0,
+    InUse = 1,
+    Maintenance = 2,
+    Broken = 3,
+    Retired = 4
+}
+
+class WorkPlaceAccess {
+    + WorkPlaceId : int <<get>> <<set>>
+    + EmployeeId : int <<get>> <<set>>
+    + AccessDate : DateTime <<get>> <<set>>
+    + AccessType : AccessType <<get>> <<set>>
+    + DeviceInfo : string? <<get>> <<set>>
+    + IpAddress : string? <<get>> <<set>>
+    + Notes : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- WorkPlaceAccess
+WorkPlaceAccess --> "WorkPlace" WorkPlace
+WorkPlaceAccess --> "Employee" Employee
+
+enum AccessType {
+    Entry = 0,
+    Exit = 1,
+    CheckIn = 2,
+    CheckOut = 3,
+    Emergency = 4
+}
+
+class WorkPlaceMetrics {
+    + WorkPlaceId : int <<get>> <<set>>
+    + MetricDate : DateTime <<get>> <<set>>
+    + OccupancyRate : decimal <<get>> <<set>>
+    + UtilizationRate : decimal <<get>> <<set>>
+    + PeakHours : string? <<get>> <<set>>
+    + AverageStayTime : decimal? <<get>> <<set>>
+    + Notes : string? <<get>> <<set>>
+}
+BaseAuditableEntity <|-- WorkPlaceMetrics
+WorkPlaceMetrics --> "WorkPlace" WorkPlace
+
+' ===== WORKPLACE RELATIONSHIPS =====
+Employee ||--o{ WorkPlaceAssignment : "assigned to"
+WorkPlace ||--o{ WorkPlaceAssignment : "contains"
+Employee ||--o{ WorkPlaceMovementRequest : "requests"
+WorkPlace ||--o{ WorkPlaceMovementRequest : "target"
+Employee ||--o{ WorkPlaceMovementHistory : "moved"
+WorkPlace ||--o{ WorkPlaceMovementHistory : "destination"
+WorkPlace ||--o{ WorkPlaceSchedule : "scheduled"
+Employee ||--o{ WorkPlaceSchedule : "works"
+WorkPlace ||--o{ WorkPlaceReservation : "reserved"
+Employee ||--o{ WorkPlaceReservation : "reserves"
+WorkPlace ||--o{ WorkPlaceEquipment : "equipped with"
+WorkPlace ||--o{ WorkPlaceAccess : "accessed"
+Employee ||--o{ WorkPlaceAccess : "accesses"
+WorkPlace ||--o{ WorkPlaceMetrics : "measured"
+
+@enduml

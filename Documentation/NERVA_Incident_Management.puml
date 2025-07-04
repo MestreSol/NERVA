@@ -1,0 +1,385 @@
+@startuml NERVA_Incident_Management
+!theme plain
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+
+title NERVA - Gestão de Incidentes
+
+package "Incident Management" as IncidentManagement {
+    
+    class Incident {
+        + IncidentId : int <<get>> <<set>>
+        + IncidentNumber : string <<get>> <<set>>
+        + Title : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + IncidentTypeId : int <<get>> <<set>>
+        + Severity : string <<get>> <<set>>
+        + Priority : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + ReportedDate : DateTime <<get>> <<set>>
+        + ReportedById : int <<get>> <<set>>
+        + AssignedToId : int? <<get>> <<set>>
+        + AssignedDate : DateTime? <<get>> <<set>>
+        + DueDate : DateTime? <<get>> <<set>>
+        + ResolvedDate : DateTime? <<get>> <<set>>
+        + ClosedDate : DateTime? <<get>> <<set>>
+        + ResolutionNotes : string? <<get>> <<set>>
+        + AffectedUserId : int? <<get>> <<set>>
+        + AffectedCompanyId : int? <<get>> <<set>>
+        + AffectedResourceId : int? <<get>> <<set>>
+        + Location : string? <<get>> <<set>>
+        + ImpactLevel : string <<get>> <<set>>
+        + BusinessImpact : string? <<get>> <<set>>
+        + GetIncidentType() : IncidentType
+        + GetReportedBy() : Employee
+        + GetAssignedTo() : Employee?
+        + GetAffectedUser() : Employee?
+        + GetAffectedCompany() : PartnerCompany?
+        + GetAffectedResource() : Resource?
+        + GetResolutions() : List<IncidentResolution>
+        + GetEscalations() : List<IncidentEscalation>
+        + GetComments() : List<IncidentComment>
+        + GetAttachments() : List<IncidentAttachment>
+        + GetRelatedIncidents() : List<Incident>
+        + CalculateAge() : TimeSpan
+        + IsOverdue() : bool
+        + RequiresEscalation() : bool
+        + CanBeClosed() : bool
+    }
+    
+    class IncidentType {
+        + TypeId : int <<get>> <<set>>
+        + TypeName : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + DefaultSeverity : string <<get>> <<set>>
+        + DefaultPriority : string <<get>> <<set>>
+        + SlaResponseTime : int? <<get>> <<set>>
+        + SlaResolutionTime : int? <<get>> <<set>>
+        + RequiresApproval : bool <<get>> <<set>>
+        + AutoAssignmentRules : string? <<get>> <<set>>
+        + NotificationRules : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetIncidents() : List<Incident>
+        + GetResolutionTemplates() : List<IncidentResolutionTemplate>
+        + GetDefaultAssignee(incident:Incident) : Employee?
+    }
+    
+    class IncidentResolution {
+        + ResolutionId : int <<get>> <<set>>
+        + IncidentId : int <<get>> <<set>>
+        + ResolutionTypeId : int <<get>> <<set>>
+        + ResolvedById : int <<get>> <<set>>
+        + ResolutionDate : DateTime <<get>> <<set>>
+        + Resolution : string <<get>> <<set>>
+        + TimeSpent : TimeSpan? <<get>> <<set>>
+        + Cost : decimal? <<get>> <<set>>
+        + PreventiveActions : string? <<get>> <<set>>
+        + IsTemporary : bool <<get>> <<set>>
+        + FollowUpRequired : bool <<get>> <<set>>
+        + FollowUpDate : DateTime? <<get>> <<set>>
+        + GetIncident() : Incident
+        + GetResolutionType() : IncidentResolutionType
+        + GetResolvedBy() : Employee
+        + GetFollowUps() : List<IncidentFollowUp>
+    }
+    
+    class IncidentResolutionType {
+        + ResolutionTypeId : int <<get>> <<set>>
+        + TypeName : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetResolutions() : List<IncidentResolution>
+    }
+    
+    class IncidentEscalation {
+        + EscalationId : int <<get>> <<set>>
+        + IncidentId : int <<get>> <<set>>
+        + EscalationLevel : int <<get>> <<set>>
+        + EscalatedToId : int <<get>> <<set>>
+        + EscalatedById : int <<get>> <<set>>
+        + EscalationDate : DateTime <<get>> <<set>>
+        + EscalationReason : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + ResponseDate : DateTime? <<get>> <<set>>
+        + ResponseNotes : string? <<get>> <<set>>
+        + GetIncident() : Incident
+        + GetEscalatedTo() : Employee
+        + GetEscalatedBy() : Employee
+        + IsResolved() : bool
+        + GetResponseTime() : TimeSpan?
+    }
+    
+    class IncidentComment {
+        + CommentId : int <<get>> <<set>>
+        + IncidentId : int <<get>> <<set>>
+        + CommentText : string <<get>> <<set>>
+        + CommentType : string <<get>> <<set>>
+        + IsPublic : bool <<get>> <<set>>
+        + CommentDate : DateTime <<get>> <<set>>
+        + CommentById : int <<get>> <<set>>
+        + GetIncident() : Incident
+        + GetCommentBy() : Employee
+    }
+    
+    class IncidentAttachment {
+        + AttachmentId : int <<get>> <<set>>
+        + IncidentId : int <<get>> <<set>>
+        + FileName : string <<get>> <<set>>
+        + FilePath : string <<get>> <<set>>
+        + FileSize : long <<get>> <<set>>
+        + ContentType : string <<get>> <<set>>
+        + UploadDate : DateTime <<get>> <<set>>
+        + UploadedById : int <<get>> <<set>>
+        + GetIncident() : Incident
+        + GetUploadedBy() : Employee
+    }
+    
+    class IncidentWorkflow {
+        + WorkflowId : int <<get>> <<set>>
+        + WorkflowName : string <<get>> <<set>>
+        + IncidentTypeId : int <<get>> <<set>>
+        + WorkflowDefinition : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetIncidentType() : IncidentType
+        + GetWorkflowSteps() : List<IncidentWorkflowStep>
+        + ExecuteWorkflow(incident:Incident) : bool
+    }
+    
+    class IncidentWorkflowStep {
+        + StepId : int <<get>> <<set>>
+        + WorkflowId : int <<get>> <<set>>
+        + StepOrder : int <<get>> <<set>>
+        + StepName : string <<get>> <<set>>
+        + StepType : string <<get>> <<set>>
+        + StepAction : string <<get>> <<set>>
+        + Condition : string? <<get>> <<set>>
+        + IsRequired : bool <<get>> <<set>>
+        + GetWorkflow() : IncidentWorkflow
+    }
+    
+    class IncidentFollowUp {
+        + FollowUpId : int <<get>> <<set>>
+        + ResolutionId : int <<get>> <<set>>
+        + FollowUpDate : DateTime <<get>> <<set>>
+        + DueDate : DateTime <<get>> <<set>>
+        + AssignedToId : int <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + CompletedDate : DateTime? <<get>> <<set>>
+        + CompletedById : int? <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + GetResolution() : IncidentResolution
+        + GetAssignedTo() : Employee
+        + GetCompletedBy() : Employee?
+        + IsCompleted() : bool
+        + IsOverdue() : bool
+    }
+    
+    class IncidentNotification {
+        + NotificationId : int <<get>> <<set>>
+        + IncidentId : int <<get>> <<set>>
+        + RecipientId : int <<get>> <<set>>
+        + NotificationType : string <<get>> <<set>>
+        + Subject : string <<get>> <<set>>
+        + Message : string <<get>> <<set>>
+        + SentDate : DateTime <<get>> <<set>>
+        + DeliveryStatus : string <<get>> <<set>>
+        + ReadDate : DateTime? <<get>> <<set>>
+        + GetIncident() : Incident
+        + GetRecipient() : Employee
+        + IsRead() : bool
+    }
+    
+    class IncidentMetrics {
+        + MetricId : int <<get>> <<set>>
+        + MetricDate : DateTime <<get>> <<set>>
+        + Period : string <<get>> <<set>>
+        + TotalIncidents : int <<get>> <<set>>
+        + OpenIncidents : int <<get>> <<set>>
+        + ResolvedIncidents : int <<get>> <<set>>
+        + ClosedIncidents : int <<get>> <<set>>
+        + EscalatedIncidents : int <<get>> <<set>>
+        + AvgResolutionTime : decimal <<get>> <<set>>
+        + AvgResponseTime : decimal <<get>> <<set>>
+        + SlaCompliance : decimal <<get>> <<set>>
+        + CustomerSatisfaction : decimal? <<get>> <<set>>
+    }
+    
+    class IncidentResolutionTemplate {
+        + TemplateId : int <<get>> <<set>>
+        + TemplateName : string <<get>> <<set>>
+        + IncidentTypeId : int <<get>> <<set>>
+        + ResolutionSteps : string <<get>> <<set>>
+        + EstimatedTime : TimeSpan? <<get>> <<set>>
+        + RequiredSkills : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetIncidentType() : IncidentType
+    }
+    
+    class IncidentSLA {
+        + SlaId : int <<get>> <<set>>
+        + IncidentId : int <<get>> <<set>>
+        + ResponseTime : TimeSpan <<get>> <<set>>
+        + ResolutionTime : TimeSpan <<get>> <<set>>
+        + ActualResponseTime : TimeSpan? <<get>> <<set>>
+        + ActualResolutionTime : TimeSpan? <<get>> <<set>>
+        + ResponseSlaBreached : bool <<get>> <<set>>
+        + ResolutionSlaBreached : bool <<get>> <<set>>
+        + GetIncident() : Incident
+        + IsResponseSlaMetrics() : bool
+        + IsResolutionSlaMetrics() : bool
+    }
+    
+    class IncidentImpact {
+        + ImpactId : int <<get>> <<set>>
+        + IncidentId : int <<get>> <<set>>
+        + ImpactType : string <<get>> <<set>>
+        + AffectedUsers : int? <<get>> <<set>>
+        + AffectedSystems : string? <<get>> <<set>>
+        + BusinessProcesses : string? <<get>> <<set>>
+        + FinancialImpact : decimal? <<get>> <<set>>
+        + ReputationalImpact : string? <<get>> <<set>>
+        + GetIncident() : Incident
+    }
+    
+    ' Enums
+    enum IncidentSeverity {
+        Low = 0,
+        Medium = 1,
+        High = 2,
+        Critical = 3,
+        Emergency = 4
+    }
+    
+    enum IncidentPriority {
+        Low = 0,
+        Medium = 1,
+        High = 2,
+        Urgent = 3,
+        Emergency = 4
+    }
+    
+    enum IncidentStatus {
+        New = 0,
+        Open = 1,
+        InProgress = 2,
+        OnHold = 3,
+        Resolved = 4,
+        Closed = 5,
+        Cancelled = 6
+    }
+    
+    enum EscalationStatus {
+        Pending = 0,
+        InProgress = 1,
+        Resolved = 2,
+        Transferred = 3
+    }
+    
+    enum NotificationType {
+        Created = 0,
+        Assigned = 1,
+        Updated = 2,
+        Escalated = 3,
+        Resolved = 4,
+        Closed = 5,
+        SlaBreached = 6
+    }
+    
+    ' Base Entity Relationships
+    BaseAuditableEntity <|-- Incident
+    BaseAuditableEntity <|-- IncidentType
+    BaseAuditableEntity <|-- IncidentResolution
+    BaseAuditableEntity <|-- IncidentResolutionType
+    BaseAuditableEntity <|-- IncidentEscalation
+    BaseAuditableEntity <|-- IncidentComment
+    BaseAuditableEntity <|-- IncidentAttachment
+    BaseAuditableEntity <|-- IncidentWorkflow
+    BaseAuditableEntity <|-- IncidentWorkflowStep
+    BaseAuditableEntity <|-- IncidentFollowUp
+    BaseAuditableEntity <|-- IncidentNotification
+    BaseAuditableEntity <|-- IncidentMetrics
+    BaseAuditableEntity <|-- IncidentResolutionTemplate
+    BaseAuditableEntity <|-- IncidentSLA
+    BaseAuditableEntity <|-- IncidentImpact
+    
+    ' Internal Relationships
+    Incident }o--|| IncidentType : "of type"
+    Incident }o--|| Employee : "reported by"
+    Incident }o--o| Employee : "assigned to"
+    Incident }o--o| Employee : "affected user"
+    Incident }o--o| PartnerCompany : "affected company"
+    Incident }o--o| Resource : "affected resource"
+    Incident ||--o{ IncidentResolution : "resolutions"
+    Incident ||--o{ IncidentEscalation : "escalations"
+    Incident ||--o{ IncidentComment : "comments"
+    Incident ||--o{ IncidentAttachment : "attachments"
+    Incident ||--o{ IncidentNotification : "notifications"
+    Incident ||--o| IncidentSLA : "SLA"
+    Incident ||--o{ IncidentImpact : "impacts"
+    
+    IncidentType ||--o{ Incident : "incidents"
+    IncidentType ||--o{ IncidentWorkflow : "workflows"
+    IncidentType ||--o{ IncidentResolutionTemplate : "templates"
+    
+    IncidentResolution }o--|| Incident : "resolves"
+    IncidentResolution }o--|| IncidentResolutionType : "of type"
+    IncidentResolution }o--|| Employee : "resolved by"
+    IncidentResolution ||--o{ IncidentFollowUp : "follow-ups"
+    
+    IncidentResolutionType ||--o{ IncidentResolution : "resolutions"
+    
+    IncidentEscalation }o--|| Incident : "escalates"
+    IncidentEscalation }o--|| Employee : "escalated to"
+    IncidentEscalation }o--|| Employee : "escalated by"
+    
+    IncidentComment }o--|| Incident : "comments on"
+    IncidentComment }o--|| Employee : "commented by"
+    
+    IncidentAttachment }o--|| Incident : "attached to"
+    IncidentAttachment }o--|| Employee : "uploaded by"
+    
+    IncidentWorkflow }o--|| IncidentType : "for type"
+    IncidentWorkflow ||--o{ IncidentWorkflowStep : "steps"
+    
+    IncidentWorkflowStep }o--|| IncidentWorkflow : "belongs to"
+    
+    IncidentFollowUp }o--|| IncidentResolution : "follows up"
+    IncidentFollowUp }o--|| Employee : "assigned to"
+    IncidentFollowUp }o--o| Employee : "completed by"
+    
+    IncidentNotification }o--|| Incident : "about"
+    IncidentNotification }o--|| Employee : "sent to"
+    
+    IncidentResolutionTemplate }o--|| IncidentType : "for type"
+    
+    IncidentSLA }o--|| Incident : "SLA for"
+    
+    IncidentImpact }o--|| Incident : "impact of"
+}
+
+' External Relationships Notes
+note right of Incident
+    Pode estar vinculado a:
+    - Employee (usuário afetado)
+    - PartnerCompany (empresa)
+    - Resource (recurso)
+    - WorkPlace (local)
+    - VisitorAccess (visitante)
+end note
+
+note right of IncidentWorkflow
+    Integra com:
+    - Approval Workflow
+    - Compliance Engine
+    - Notification System
+    - Automated Actions
+end note
+
+@enduml

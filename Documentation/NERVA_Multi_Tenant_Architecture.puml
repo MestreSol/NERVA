@@ -1,0 +1,450 @@
+@startuml NERVA_Multi_Tenant_Architecture
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+skinparam package {
+    BackgroundColor #F3E5F5
+    BorderColor #7B1FA2
+    FontColor #4A148C
+    FontSize 14
+    FontStyle bold
+}
+
+title NERVA - Multi-Tenant Architecture Module
+
+' ===== MULTI-TENANT ARCHITECTURE PACKAGE =====
+package "Multi-Tenant Architecture" as MultiTenantArchitecture {
+    
+    ' Core Tenant Management
+    class Tenant {
+        + Id : int <<get>> <<set>>
+        + TenantCode : string <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + DisplayName : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + Domain : string? <<get>> <<set>>
+        + Subdomain : string? <<get>> <<set>>
+        + TenantType : TenantType <<get>> <<set>>
+        + Plan : TenantPlan <<get>> <<set>>
+        + Status : TenantStatus <<get>> <<set>>
+        + CreatedDate : DateTimeOffset <<get>> <<set>>
+        + ActivationDate : DateTimeOffset? <<get>> <<set>>
+        + ExpirationDate : DateTimeOffset? <<get>> <<set>>
+        + SuspensionDate : DateTimeOffset? <<get>> <<set>>
+        + MaxUsers : int <<get>> <<set>>
+        + MaxStorage : long <<get>> <<set>>
+        + MaxApiCalls : int <<get>> <<set>>
+        + TimeZone : string <<get>> <<set>>
+        + Locale : string <<get>> <<set>>
+        + Currency : string <<get>> <<set>>
+        + ContactEmail : string <<get>> <<set>>
+        + ContactPhone : string? <<get>> <<set>>
+        + BillingEmail : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + Activate() : void
+        + Suspend(reason:string) : void
+        + Deactivate() : void
+        + UpgradePlan(newPlan:TenantPlan) : void
+        + DowngradePlan(newPlan:TenantPlan) : void
+        + GetUsageStatistics() : TenantUsageStats
+        + IsWithinLimits() : bool
+        + GetDatabaseConnectionString() : string
+        + GetStorageQuotaUsed() : long
+        + GetActiveUserCount() : int
+    }
+    
+    ' Tenant Configuration
+    class TenantConfiguration {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + ConfigurationKey : string <<get>> <<set>>
+        + ConfigurationValue : string <<get>> <<set>>
+        + ValueType : ConfigurationValueType <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + IsEncrypted : bool <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + DefaultValue : string? <<get>> <<set>>
+        + IsUserConfigurable : bool <<get>> <<set>>
+        + RequiresRestart : bool <<get>> <<set>>
+        + ValidationRule : string? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + GetTypedValue<T>() : T
+        + SetValue<T>(value:T) : void
+        + ValidateValue(value:string) : bool
+        + EncryptValue() : void
+        + DecryptValue() : void
+        + ResetToDefault() : void
+    }
+    
+    ' Tenant Features
+    class TenantFeature {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + FeatureId : int <<get>> <<set>>
+        + IsEnabled : bool <<get>> <<set>>
+        + EnabledDate : DateTimeOffset? <<get>> <<set>>
+        + DisabledDate : DateTimeOffset? <<get>> <<set>>
+        + LimitValue : int? <<get>> <<set>>
+        + UsedValue : int <<get>> <<set>>
+        + Configuration : string? <<get>> <<set>>
+        + ExpirationDate : DateTimeOffset? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + Enable() : void
+        + Disable() : void
+        + UpdateLimit(newLimit:int) : void
+        + UpdateUsage(usedValue:int) : void
+        + IsLimitExceeded() : bool
+        + GetRemainingQuota() : int
+        + IsExpired() : bool
+    }
+    
+    ' Feature Catalog
+    class Feature {
+        + Id : int <<get>> <<set>>
+        + FeatureCode : string <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + FeatureType : FeatureType <<get>> <<set>>
+        + IsDefault : bool <<get>> <<set>>
+        + RequiresPlan : TenantPlan? <<get>> <<set>>
+        + HasLimit : bool <<get>> <<set>>
+        + DefaultLimit : int? <<get>> <<set>>
+        + UnitType : string? <<get>> <<set>>
+        + Priority : int <<get>> <<set>>
+        + Dependencies : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + IsAvailableForPlan(plan:TenantPlan) : bool
+        + GetDependentFeatures() : List<Feature>
+        + CheckDependencies(tenantId:int) : bool
+    }
+    
+    ' Tenant Database Schema
+    class TenantDatabase {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + DatabaseName : string <<get>> <<set>>
+        + DatabaseType : DatabaseType <<get>> <<set>>
+        + ConnectionString : string <<get>> <<set>>
+        + ServerName : string <<get>> <<set>>
+        + ServerPort : int <<get>> <<set>>
+        + IsolationLevel : IsolationLevel <<get>> <<set>>
+        + SchemaVersion : string <<get>> <<set>>
+        + MaxConnections : int <<get>> <<set>>
+        + BackupSchedule : string? <<get>> <<set>>
+        + LastBackupDate : DateTimeOffset? <<get>> <<set>>
+        + SizeInMB : long <<get>> <<set>>
+        + MaxSizeInMB : long <<get>> <<set>>
+        + IsReadOnly : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + TestConnection() : Task<bool>
+        + CreateDatabase() : Task<bool>
+        + DropDatabase() : Task<bool>
+        + BackupDatabase() : Task<bool>
+        + RestoreDatabase(backupPath:string) : Task<bool>
+        + UpdateSchema(targetVersion:string) : Task<bool>
+        + GetDatabaseSize() : Task<long>
+        + OptimizeDatabase() : Task<bool>
+    }
+    
+    ' Tenant User Management
+    class TenantUser {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + TenantRole : TenantRole <<get>> <<set>>
+        + IsOwner : bool <<get>> <<set>>
+        + IsAdmin : bool <<get>> <<set>>
+        + InvitedDate : DateTimeOffset? <<get>> <<set>>
+        + JoinedDate : DateTimeOffset? <<get>> <<set>>
+        + LastAccessDate : DateTimeOffset? <<get>> <<set>>
+        + Status : TenantUserStatus <<get>> <<set>>
+        + InvitationToken : string? <<get>> <<set>>
+        + InvitationExpiry : DateTimeOffset? <<get>> <<set>>
+        + Permissions : string? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + InviteUser(email:string) : void
+        + AcceptInvitation(token:string) : bool
+        + RemoveFromTenant() : void
+        + UpdateRole(newRole:TenantRole) : void
+        + GrantPermissions(permissions:string[]) : void
+        + RevokePermissions(permissions:string[]) : void
+        + IsInvitationExpired() : bool
+        + GetEffectivePermissions() : string[]
+    }
+    
+    ' Tenant Resource Usage
+    class TenantResourceUsage {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + ResourceType : ResourceType <<get>> <<set>>
+        + UsageDate : DateTimeOffset <<get>> <<set>>
+        + UsageValue : long <<get>> <<set>>
+        + UnitType : string <<get>> <<set>>
+        + Cost : decimal? <<get>> <<set>>
+        + Currency : string? <<get>> <<set>>
+        + BillingPeriod : string? <<get>> <<set>>
+        + MetricType : MetricType <<get>> <<set>>
+        + AdditionalData : string? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + CalculateCost() : decimal
+        + GetUsageForPeriod(startDate:DateTimeOffset, endDate:DateTimeOffset) : long
+        + GetFormattedUsage() : string
+    }
+    
+    ' Tenant Billing
+    class TenantBilling {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + BillingPeriod : string <<get>> <<set>>
+        + PeriodStart : DateTimeOffset <<get>> <<set>>
+        + PeriodEnd : DateTimeOffset <<get>> <<set>>
+        + BaseAmount : decimal <<get>> <<set>>
+        + UsageAmount : decimal <<get>> <<set>>
+        + TotalAmount : decimal <<get>> <<set>>
+        + Currency : string <<get>> <<set>>
+        + TaxAmount : decimal <<get>> <<set>>
+        + DiscountAmount : decimal <<get>> <<set>>
+        + Status : BillingStatus <<get>> <<set>>
+        + InvoiceDate : DateTimeOffset? <<get>> <<set>>
+        + PaymentDate : DateTimeOffset? <<get>> <<set>>
+        + PaymentMethod : string? <<get>> <<set>>
+        + PaymentReference : string? <<get>> <<set>>
+        + DueDate : DateTimeOffset <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + CalculateTotal() : decimal
+        + ApplyDiscount(discountPercent:decimal) : void
+        + MarkAsPaid(paymentMethod:string, reference:string) : void
+        + GenerateInvoice() : Task<string>
+        + SendInvoice() : Task<bool>
+        + IsOverdue() : bool
+        + GetPaymentStatus() : PaymentStatus
+    }
+    
+    ' Tenant Backup
+    class TenantBackup {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + BackupType : BackupType <<get>> <<set>>
+        + BackupDate : DateTimeOffset <<get>> <<set>>
+        + BackupSize : long <<get>> <<set>>
+        + BackupLocation : string <<get>> <<set>>
+        + BackupStatus : BackupStatus <<get>> <<set>>
+        + StartTime : DateTimeOffset <<get>> <<set>>
+        + EndTime : DateTimeOffset? <<get>> <<set>>
+        + Duration : TimeSpan? <<get>> <<set>>
+        + ChecksumMD5 : string? <<get>> <<set>>
+        + ChecksumSHA256 : string? <<get>> <<set>>
+        + CompressionRatio : decimal? <<get>> <<set>>
+        + RetentionDays : int <<get>> <<set>>
+        + ExpirationDate : DateTimeOffset <<get>> <<set>>
+        + ErrorMessage : string? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + StartBackup() : Task<bool>
+        + ValidateBackup() : Task<bool>
+        + RestoreBackup() : Task<bool>
+        + DeleteBackup() : Task<bool>
+        + GetBackupInfo() : BackupInfo
+        + IsExpired() : bool
+    }
+    
+    ' Tenant Audit Log
+    class TenantAuditLog {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + UserId : int? <<get>> <<set>>
+        + Action : string <<get>> <<set>>
+        + EntityType : string <<get>> <<set>>
+        + EntityId : string? <<get>> <<set>>
+        + OldValues : string? <<get>> <<set>>
+        + NewValues : string? <<get>> <<set>>
+        + Timestamp : DateTimeOffset <<get>> <<set>>
+        + IpAddress : string? <<get>> <<set>>
+        + UserAgent : string? <<get>> <<set>>
+        + SessionId : string? <<get>> <<set>>
+        + RequestId : string? <<get>> <<set>>
+        + AuditLevel : AuditLevel <<get>> <<set>>
+        + Category : string? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + GetFormattedLog() : string
+        + GetChangeSummary() : string
+        + IsSecurityRelevant() : bool
+        + GetAuditTrail() : List<TenantAuditLog>
+    }
+    
+    ' Enums
+    enum TenantType {
+        TRIAL
+        BASIC
+        PROFESSIONAL
+        ENTERPRISE
+        CUSTOM
+    }
+    
+    enum TenantPlan {
+        FREE
+        STARTER
+        PROFESSIONAL
+        ENTERPRISE
+        CUSTOM
+    }
+    
+    enum TenantStatus {
+        ACTIVE
+        SUSPENDED
+        EXPIRED
+        DEACTIVATED
+        PENDING_ACTIVATION
+        TRIAL_EXPIRED
+        PAYMENT_OVERDUE
+    }
+    
+    enum ConfigurationValueType {
+        STRING
+        INTEGER
+        DECIMAL
+        BOOLEAN
+        JSON
+        XML
+        ENCRYPTED
+    }
+    
+    enum FeatureType {
+        FUNCTIONAL
+        STORAGE
+        COMPUTATIONAL
+        INTEGRATION
+        REPORTING
+        SECURITY
+        ADMINISTRATIVE
+    }
+    
+    enum DatabaseType {
+        SQL_SERVER
+        POSTGRESQL
+        MYSQL
+        ORACLE
+        MONGODB
+        COSMOSDB
+    }
+    
+    enum IsolationLevel {
+        DATABASE_PER_TENANT
+        SCHEMA_PER_TENANT
+        SHARED_DATABASE
+        HYBRID
+    }
+    
+    enum TenantRole {
+        OWNER
+        ADMIN
+        MANAGER
+        USER
+        VIEWER
+        GUEST
+    }
+    
+    enum TenantUserStatus {
+        INVITED
+        ACTIVE
+        SUSPENDED
+        REMOVED
+        EXPIRED
+    }
+    
+    enum ResourceType {
+        STORAGE
+        BANDWIDTH
+        API_CALLS
+        USERS
+        TRANSACTIONS
+        COMPUTE_HOURS
+        DATABASE_CONNECTIONS
+        EMAIL_SENDS
+    }
+    
+    enum MetricType {
+        CURRENT
+        ACCUMULATED
+        PEAK
+        AVERAGE
+    }
+    
+    enum BillingStatus {
+        DRAFT
+        PENDING
+        INVOICED
+        PAID
+        OVERDUE
+        CANCELLED
+        REFUNDED
+    }
+    
+    enum BackupType {
+        FULL
+        INCREMENTAL
+        DIFFERENTIAL
+        TRANSACTION_LOG
+    }
+    
+    enum BackupStatus {
+        SCHEDULED
+        IN_PROGRESS
+        COMPLETED
+        FAILED
+        EXPIRED
+        RESTORED
+    }
+    
+    enum AuditLevel {
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+    }
+    
+    ' Relationships
+    Tenant ||--o{ TenantConfiguration : "configures"
+    Tenant ||--o{ TenantFeature : "has"
+    Tenant ||--o{ TenantDatabase : "uses"
+    Tenant ||--o{ TenantUser : "contains"
+    Tenant ||--o{ TenantResourceUsage : "tracks"
+    Tenant ||--o{ TenantBilling : "bills"
+    Tenant ||--o{ TenantBackup : "backs_up"
+    Tenant ||--o{ TenantAuditLog : "audits"
+    
+    Feature ||--o{ TenantFeature : "enabled_in"
+    
+    TenantDatabase ||--o{ TenantBackup : "backed_up"
+    
+    TenantResourceUsage }o--|| TenantBilling : "included_in"
+    
+    TenantUser }o--|| TenantAuditLog : "performs"
+}
+
+@enduml

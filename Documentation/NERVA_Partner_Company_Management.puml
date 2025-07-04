@@ -1,0 +1,316 @@
+@startuml NERVA_Partner_Company_Management
+!theme plain
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+
+title NERVA - Gestão de Empresas Parceiras
+
+package "Partner Company Management" as PartnerCompanyManagement {
+    
+    class PartnerCompany {
+        + CompanyId : int <<get>> <<set>>
+        + CompanyName : string <<get>> <<set>>
+        + TradeName : string? <<get>> <<set>>
+        + TaxId : string <<get>> <<set>>
+        + ContactName : string <<get>> <<set>>
+        + ContactEmail : string <<get>> <<set>>
+        + ContactPhone : string <<get>> <<set>>
+        + Address : string <<get>> <<set>>
+        + City : string <<get>> <<set>>
+        + State : string <<get>> <<set>>
+        + ZipCode : string <<get>> <<set>>
+        + Country : string <<get>> <<set>>
+        + CompanyType : string <<get>> <<set>>
+        + BusinessArea : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + RegistrationDate : DateTime <<get>> <<set>>
+        + LastEvaluationDate : DateTime? <<get>> <<set>>
+        + ComplianceStatus : string <<get>> <<set>>
+        + GetContracts() : List<PartnerContract>
+        + GetEmployees() : List<PartnerEmployee>
+        + GetComplianceRecords() : List<PartnerCompliance>
+        + GetReports() : List<PartnerReport>
+        + GetActiveContracts() : List<PartnerContract>
+        + IsCompliant() : bool
+        + CalculateComplianceScore() : decimal
+    }
+    
+    class PartnerEmployee {
+        + EmployeeId : int <<get>> <<set>>
+        + CompanyId : int <<get>> <<set>>
+        + EmployeeNumber : string <<get>> <<set>>
+        + FirstName : string <<get>> <<set>>
+        + LastName : string <<get>> <<set>>
+        + Email : string <<get>> <<set>>
+        + Phone : string <<get>> <<set>>
+        + DocumentType : string <<get>> <<set>>
+        + DocumentNumber : string <<get>> <<set>>
+        + Position : string <<get>> <<set>>
+        + Department : string? <<get>> <<set>>
+        + HireDate : DateTime <<get>> <<set>>
+        + ContractEndDate : DateTime? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + AccessLevel : int <<get>> <<set>>
+        + TrainingStatus : string <<get>> <<set>>
+        + ComplianceStatus : string <<get>> <<set>>
+        + GetCompany() : PartnerCompany
+        + GetTrainings() : List<PartnerTraining>
+        + GetAccessLogs() : List<PartnerAccessLog>
+        + GetComplianceRecords() : List<PartnerCompliance>
+        + IsTrainingValid() : bool
+        + HasValidDocuments() : bool
+        + GetFullName() : string
+    }
+    
+    class PartnerContract {
+        + ContractId : int <<get>> <<set>>
+        + CompanyId : int <<get>> <<set>>
+        + ContractNumber : string <<get>> <<set>>
+        + ContractType : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + StartDate : DateTime <<get>> <<set>>
+        + EndDate : DateTime <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + Currency : string <<get>> <<set>>
+        + PaymentTerms : string <<get>> <<set>>
+        + SlaRequirements : string <<get>> <<set>>
+        + AccessRules : string <<get>> <<set>>
+        + MaxEmployees : int? <<get>> <<set>>
+        + AllowedAreas : string <<get>> <<set>>
+        + RequiredTrainings : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + RenewalDate : DateTime? <<get>> <<set>>
+        + ResponsibleUserId : int <<get>> <<set>>
+        + GetCompany() : PartnerCompany
+        + GetResponsibleUser() : Employee
+        + GetSlaMetrics() : List<PartnerSlaMetric>
+        + IsExpired() : bool
+        + IsNearExpiry() : bool
+        + GetRemainingDays() : int
+        + ValidateCompliance() : bool
+    }
+    
+    class PartnerCompliance {
+        + ComplianceId : int <<get>> <<set>>
+        + CompanyId : int? <<get>> <<set>>
+        + EmployeeId : int? <<get>> <<set>>
+        + ComplianceType : string <<get>> <<set>>
+        + RequirementName : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + DueDate : DateTime <<get>> <<set>>
+        + CompletionDate : DateTime? <<get>> <<set>>
+        + ValidityPeriod : int? <<get>> <<set>>
+        + ExpiryDate : DateTime? <<get>> <<set>>
+        + DocumentPath : string? <<get>> <<set>>
+        + VerifiedById : int? <<get>> <<set>>
+        + VerificationDate : DateTime? <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + GetCompany() : PartnerCompany?
+        + GetEmployee() : PartnerEmployee?
+        + GetVerifiedBy() : Employee?
+        + IsExpired() : bool
+        + IsNearExpiry() : bool
+        + GetDaysUntilExpiry() : int
+    }
+    
+    class PartnerTraining {
+        + TrainingId : int <<get>> <<set>>
+        + EmployeeId : int <<get>> <<set>>
+        + TrainingName : string <<get>> <<set>>
+        + TrainingType : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + CompletionDate : DateTime <<get>> <<set>>
+        + ExpiryDate : DateTime? <<get>> <<set>>
+        + CertificateNumber : string? <<get>> <<set>>
+        + TrainingProvider : string <<get>> <<set>>
+        + Score : decimal? <<get>> <<set>>
+        + IsValid : bool <<get>> <<set>>
+        + GetEmployee() : PartnerEmployee
+        + IsExpired() : bool
+        + RequiresRenewal() : bool
+    }
+    
+    class PartnerAccessLog {
+        + LogId : int <<get>> <<set>>
+        + EmployeeId : int <<get>> <<set>>
+        + AccessDate : DateTime <<get>> <<set>>
+        + AccessType : string <<get>> <<set>>
+        + Location : string <<get>> <<set>>
+        + Duration : TimeSpan? <<get>> <<set>>
+        + Purpose : string? <<get>> <<set>>
+        + ApprovedById : int? <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + GetEmployee() : PartnerEmployee
+        + GetApprovedBy() : Employee?
+    }
+    
+    class PartnerSlaMetric {
+        + MetricId : int <<get>> <<set>>
+        + ContractId : int <<get>> <<set>>
+        + MetricName : string <<get>> <<set>>
+        + MetricType : string <<get>> <<set>>
+        + TargetValue : decimal <<get>> <<set>>
+        + ActualValue : decimal <<get>> <<set>>
+        + MeasurementPeriod : string <<get>> <<set>>
+        + MeasurementDate : DateTime <<get>> <<set>>
+        + IsCompliant : bool <<get>> <<set>>
+        + Penalty : decimal? <<get>> <<set>>
+        + GetContract() : PartnerContract
+        + CalculateCompliance() : bool
+    }
+    
+    class PartnerReport {
+        + ReportId : int <<get>> <<set>>
+        + CompanyId : int <<get>> <<set>>
+        + ReportType : string <<get>> <<set>>
+        + ReportPeriod : string <<get>> <<set>>
+        + StartDate : DateTime <<get>> <<set>>
+        + EndDate : DateTime <<get>> <<set>>
+        + GeneratedDate : DateTime <<get>> <<set>>
+        + GeneratedById : int <<get>> <<set>>
+        + ReportData : string <<get>> <<set>>
+        + FilePath : string? <<get>> <<set>>
+        + GetCompany() : PartnerCompany
+        + GetGeneratedBy() : Employee
+    }
+    
+    class PartnerDocument {
+        + DocumentId : int <<get>> <<set>>
+        + CompanyId : int? <<get>> <<set>>
+        + EmployeeId : int? <<get>> <<set>>
+        + DocumentType : string <<get>> <<set>>
+        + DocumentName : string <<get>> <<set>>
+        + DocumentPath : string <<get>> <<set>>
+        + UploadDate : DateTime <<get>> <<set>>
+        + ExpiryDate : DateTime? <<get>> <<set>>
+        + VerificationStatus : string <<get>> <<set>>
+        + VerifiedById : int? <<get>> <<set>>
+        + VerificationDate : DateTime? <<get>> <<set>>
+        + GetCompany() : PartnerCompany?
+        + GetEmployee() : PartnerEmployee?
+        + GetVerifiedBy() : Employee?
+        + IsExpired() : bool
+    }
+    
+    class PartnerEvaluation {
+        + EvaluationId : int <<get>> <<set>>
+        + CompanyId : int <<get>> <<set>>
+        + EvaluationDate : DateTime <<get>> <<set>>
+        + EvaluationType : string <<get>> <<set>>
+        + EvaluatorId : int <<get>> <<set>>
+        + QualityScore : decimal <<get>> <<set>>
+        + ComplianceScore : decimal <<get>> <<set>>
+        + DeliveryScore : decimal <<get>> <<set>>
+        + OverallScore : decimal <<get>> <<set>>
+        + Observations : string? <<get>> <<set>>
+        + Recommendations : string? <<get>> <<set>>
+        + GetCompany() : PartnerCompany
+        + GetEvaluator() : Employee
+    }
+    
+    ' Enums
+    enum CompanyType {
+        Supplier = 0,
+        ServiceProvider = 1,
+        Consultant = 2,
+        Contractor = 3,
+        Vendor = 4
+    }
+    
+    enum ContractType {
+        Service = 0,
+        Supply = 1,
+        Maintenance = 2,
+        Consulting = 3,
+        Temporary = 4
+    }
+    
+    enum ComplianceStatus {
+        Compliant = 0,
+        NonCompliant = 1,
+        PendingReview = 2,
+        Expired = 3,
+        Suspended = 4
+    }
+    
+    enum TrainingStatus {
+        Valid = 0,
+        Expired = 1,
+        Pending = 2,
+        InProgress = 3,
+        Failed = 4
+    }
+    
+    ' Base Entity Relationships
+    BaseAuditableEntity <|-- PartnerCompany
+    BaseAuditableEntity <|-- PartnerEmployee
+    BaseAuditableEntity <|-- PartnerContract
+    BaseAuditableEntity <|-- PartnerCompliance
+    BaseAuditableEntity <|-- PartnerTraining
+    BaseAuditableEntity <|-- PartnerAccessLog
+    BaseAuditableEntity <|-- PartnerSlaMetric
+    BaseAuditableEntity <|-- PartnerReport
+    BaseAuditableEntity <|-- PartnerDocument
+    BaseAuditableEntity <|-- PartnerEvaluation
+    
+    ' Internal Relationships
+    PartnerCompany ||--o{ PartnerEmployee : "employs"
+    PartnerCompany ||--o{ PartnerContract : "has contracts"
+    PartnerCompany ||--o{ PartnerCompliance : "compliance"
+    PartnerCompany ||--o{ PartnerReport : "reports"
+    PartnerCompany ||--o{ PartnerDocument : "documents"
+    PartnerCompany ||--o{ PartnerEvaluation : "evaluations"
+    
+    PartnerEmployee }o--|| PartnerCompany : "works for"
+    PartnerEmployee ||--o{ PartnerTraining : "has trainings"
+    PartnerEmployee ||--o{ PartnerAccessLog : "access logs"
+    PartnerEmployee ||--o{ PartnerCompliance : "compliance"
+    PartnerEmployee ||--o{ PartnerDocument : "documents"
+    
+    PartnerContract }o--|| PartnerCompany : "belongs to"
+    PartnerContract }o--|| Employee : "managed by"
+    PartnerContract ||--o{ PartnerSlaMetric : "has metrics"
+    
+    PartnerCompliance }o--o| PartnerCompany : "for company"
+    PartnerCompliance }o--o| PartnerEmployee : "for employee"
+    PartnerCompliance }o--o| Employee : "verified by"
+    
+    PartnerTraining }o--|| PartnerEmployee : "for employee"
+    
+    PartnerAccessLog }o--|| PartnerEmployee : "logged by"
+    PartnerAccessLog }o--o| Employee : "approved by"
+    
+    PartnerSlaMetric }o--|| PartnerContract : "measures"
+    
+    PartnerReport }o--|| PartnerCompany : "about"
+    PartnerReport }o--|| Employee : "generated by"
+    
+    PartnerDocument }o--o| PartnerCompany : "belongs to"
+    PartnerDocument }o--o| PartnerEmployee : "belongs to"
+    PartnerDocument }o--o| Employee : "verified by"
+    
+    PartnerEvaluation }o--|| PartnerCompany : "evaluates"
+    PartnerEvaluation }o--|| Employee : "evaluated by"
+}
+
+' External Relationships Notes
+note right of PartnerEmployee
+    Integra com:
+    - Employee Management (aprovadores)
+    - Access Control (permissões)
+    - Visitor Management (terceiros)
+    - Workplace Movement (alocação)
+end note
+
+note right of PartnerContract
+    Integra com:
+    - Approval Workflow (aprovações)
+    - Compliance Engine (regras)
+    - KPI Analytics (métricas)
+end note
+
+@enduml

@@ -1,0 +1,480 @@
+@startuml NERVA_Vehicle_Tracking_IoT
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+skinparam package {
+    BackgroundColor #F3E5F5
+    BorderColor #7B1FA2
+    FontColor #4A148C
+    FontSize 14
+    FontStyle bold
+}
+
+title NERVA - Vehicle Tracking & IoT Management Module
+
+' ===== VEHICLE TRACKING & IOT PACKAGE =====
+package "Vehicle Tracking & IoT" as VehicleTrackingIoT {
+    
+    ' Core Vehicle Entities
+    class Vehicle {
+        + Id : int <<get>> <<set>>
+        + LicensePlate : string <<get>> <<set>>
+        + VehicleType : VehicleType <<get>> <<set>>
+        + Brand : string <<get>> <<set>>
+        + Model : string <<get>> <<set>>
+        + Year : int <<get>> <<set>>
+        + Color : string <<get>> <<set>>
+        + ChassisNumber : string <<get>> <<set>>
+        + EngineNumber : string <<get>> <<set>>
+        + FuelType : FuelType <<get>> <<set>>
+        + MaxCapacity : int <<get>> <<set>>
+        + CurrentDriverId : int? <<get>> <<set>>
+        + CompanyId : int <<get>> <<set>>
+        + Status : VehicleStatus <<get>> <<set>>
+        + LastMaintenanceDate : DateTimeOffset? <<get>> <<set>>
+        + NextMaintenanceDate : DateTimeOffset? <<get>> <<set>>
+        + MaintenanceKmInterval : int <<get>> <<set>>
+        + CurrentKm : int <<get>> <<set>>
+        + AcquisitionDate : DateTimeOffset <<get>> <<set>>
+        + AcquisitionValue : decimal <<get>> <<set>>
+        + InsuranceCompany : string? <<get>> <<set>>
+        + InsurancePolicy : string? <<get>> <<set>>
+        + InsuranceExpiryDate : DateTimeOffset? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + GetCurrentDriver() : Employee?
+        + AssignDriver(driverId:int) : void
+        + UnassignDriver() : void
+        + UpdateKm(newKm:int) : void
+        + ScheduleMaintenance(date:DateTimeOffset) : void
+        + MarkAsInMaintenance() : void
+        + MarkAsAvailable() : void
+    }
+    
+    ' IoT Device Management
+    class IoTDevice {
+        + Id : int <<get>> <<set>>
+        + DeviceId : string <<get>> <<set>>
+        + DeviceType : IoTDeviceType <<get>> <<set>>
+        + SerialNumber : string <<get>> <<set>>
+        + Manufacturer : string <<get>> <<set>>
+        + Model : string <<get>> <<set>>
+        + FirmwareVersion : string <<get>> <<set>>
+        + InstallationDate : DateTimeOffset <<get>> <<set>>
+        + LastMaintenanceDate : DateTimeOffset? <<get>> <<set>>
+        + BatteryLevel : int? <<get>> <<set>>
+        + SignalStrength : int? <<get>> <<set>>
+        + Status : IoTDeviceStatus <<get>> <<set>>
+        + VehicleId : int? <<get>> <<set>>
+        + LocationId : int? <<get>> <<set>>
+        + Configuration : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + SendCommand(command:string) : Task<bool>
+        + UpdateFirmware(version:string) : Task<bool>
+        + GetTelemetryData() : Task<IoTTelemetryData>
+        + Calibrate() : Task<bool>
+        + Reset() : Task<bool>
+    }
+    
+    ' Vehicle Tracking
+    class VehicleTracking {
+        + Id : int <<get>> <<set>>
+        + VehicleId : int <<get>> <<set>>
+        + IoTDeviceId : int <<get>> <<set>>
+        + Latitude : decimal <<get>> <<set>>
+        + Longitude : decimal <<get>> <<set>>
+        + Altitude : decimal? <<get>> <<set>>
+        + Speed : decimal <<get>> <<set>>
+        + Direction : decimal <<get>> <<set>>
+        + Accuracy : decimal <<get>> <<set>>
+        + Timestamp : DateTimeOffset <<get>> <<set>>
+        + Address : string? <<get>> <<set>>
+        + City : string? <<get>> <<set>>
+        + State : string? <<get>> <<set>>
+        + Country : string? <<get>> <<set>>
+        + ZipCode : string? <<get>> <<set>>
+        + IsInsideGeofence : bool <<get>> <<set>>
+        + GeofenceId : int? <<get>> <<set>>
+        + EngineStatus : EngineStatus <<get>> <<set>>
+        + FuelLevel : decimal? <<get>> <<set>>
+        + Temperature : decimal? <<get>> <<set>>
+        + Humidity : decimal? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + CalculateDistance(otherPoint:VehicleTracking) : decimal
+        + IsWithinRadius(centerLat:decimal, centerLng:decimal, radiusKm:decimal) : bool
+        + GetFormattedAddress() : string
+    }
+    
+    ' Geofence Management
+    class Geofence {
+        + Id : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + GeofenceType : GeofenceType <<get>> <<set>>
+        + Shape : GeofenceShape <<get>> <<set>>
+        + Coordinates : string <<get>> <<set>>
+        + Radius : decimal? <<get>> <<set>>
+        + CompanyId : int <<get>> <<set>>
+        + AlertOnEntry : bool <<get>> <<set>>
+        + AlertOnExit : bool <<get>> <<set>>
+        + AllowedVehicles : string? <<get>> <<set>>
+        + RestrictedVehicles : string? <<get>> <<set>>
+        + ActiveDays : string <<get>> <<set>>
+        + ActiveTimeStart : TimeSpan? <<get>> <<set>>
+        + ActiveTimeEnd : TimeSpan? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + IsPointInside(latitude:decimal, longitude:decimal) : bool
+        + IsVehicleAllowed(vehicleId:int) : bool
+        + IsActiveNow() : bool
+        + GetCoordinatePoints() : List<GeoPoint>
+    }
+    
+    ' Vehicle Maintenance
+    class VehicleMaintenance {
+        + Id : int <<get>> <<set>>
+        + VehicleId : int <<get>> <<set>>
+        + MaintenanceType : MaintenanceType <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + ScheduledDate : DateTimeOffset <<get>> <<set>>
+        + CompletedDate : DateTimeOffset? <<get>> <<set>>
+        + Cost : decimal? <<get>> <<set>>
+        + ServiceProvider : string? <<get>> <<set>>
+        + ServiceLocation : string? <<get>> <<set>>
+        + KmAtMaintenance : int? <<get>> <<set>>
+        + NextMaintenanceKm : int? <<get>> <<set>>
+        + Status : MaintenanceStatus <<get>> <<set>>
+        + Priority : MaintenancePriority <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + PartsReplaced : string? <<get>> <<set>>
+        + ResponsibleEmployeeId : int? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + MarkAsCompleted(cost:decimal?, notes:string?) : void
+        + Reschedule(newDate:DateTimeOffset) : void
+        + Cancel(reason:string) : void
+        + AddPartReplaced(part:string) : void
+    }
+    
+    ' Trip Management
+    class VehicleTrip {
+        + Id : int <<get>> <<set>>
+        + VehicleId : int <<get>> <<set>>
+        + DriverId : int <<get>> <<set>>
+        + TripType : TripType <<get>> <<set>>
+        + Purpose : string <<get>> <<set>>
+        + StartLocation : string <<get>> <<set>>
+        + EndLocation : string <<get>> <<set>>
+        + StartLatitude : decimal? <<get>> <<set>>
+        + StartLongitude : decimal? <<get>> <<set>>
+        + EndLatitude : decimal? <<get>> <<set>>
+        + EndLongitude : decimal? <<get>> <<set>>
+        + PlannedStartTime : DateTimeOffset <<get>> <<set>>
+        + PlannedEndTime : DateTimeOffset <<get>> <<set>>
+        + ActualStartTime : DateTimeOffset? <<get>> <<set>>
+        + ActualEndTime : DateTimeOffset? <<get>> <<set>>
+        + StartKm : int? <<get>> <<set>>
+        + EndKm : int? <<get>> <<set>>
+        + TotalDistance : decimal? <<get>> <<set>>
+        + FuelConsumed : decimal? <<get>> <<set>>
+        + Status : TripStatus <<get>> <<set>>
+        + ApprovalStatus : ApprovalStatus <<get>> <<set>>
+        + ApprovedBy : int? <<get>> <<set>>
+        + RequestedBy : int <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + StartTrip(actualStartTime:DateTimeOffset, startKm:int) : void
+        + EndTrip(actualEndTime:DateTimeOffset, endKm:int) : void
+        + CalculateTotalDistance() : decimal
+        + CalculateFuelEfficiency() : decimal
+        + Approve(approverId:int) : void
+        + Reject(approverId:int, reason:string) : void
+    }
+    
+    ' IoT Telemetry Data
+    class IoTTelemetryData {
+        + Id : int <<get>> <<set>>
+        + IoTDeviceId : int <<get>> <<set>>
+        + VehicleId : int? <<get>> <<set>>
+        + SensorType : SensorType <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + Unit : string <<get>> <<set>>
+        + Timestamp : DateTimeOffset <<get>> <<set>>
+        + Quality : DataQuality <<get>> <<set>>
+        + IsAlarm : bool <<get>> <<set>>
+        + AlarmLevel : AlarmLevel? <<get>> <<set>>
+        + MinThreshold : decimal? <<get>> <<set>>
+        + MaxThreshold : decimal? <<get>> <<set>>
+        + RawData : string? <<get>> <<set>>
+        + ProcessedData : string? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + IsWithinThresholds() : bool
+        + GenerateAlarm() : IoTAlarm?
+        + GetFormattedValue() : string
+    }
+    
+    ' IoT Alerts and Alarms
+    class IoTAlarm {
+        + Id : int <<get>> <<set>>
+        + IoTDeviceId : int <<get>> <<set>>
+        + VehicleId : int? <<get>> <<set>>
+        + AlarmType : AlarmType <<get>> <<set>>
+        + Title : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Severity : AlarmSeverity <<get>> <<set>>
+        + Status : AlarmStatus <<get>> <<set>>
+        + TriggerValue : decimal? <<get>> <<set>>
+        + ThresholdValue : decimal? <<get>> <<set>>
+        + TriggerTime : DateTimeOffset <<get>> <<set>>
+        + AcknowledgedTime : DateTimeOffset? <<get>> <<set>>
+        + AcknowledgedBy : int? <<get>> <<set>>
+        + ResolvedTime : DateTimeOffset? <<get>> <<set>>
+        + ResolvedBy : int? <<get>> <<set>>
+        + ResolutionNotes : string? <<get>> <<set>>
+        + NotificationsSent : int <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + Acknowledge(employeeId:int) : void
+        + Resolve(employeeId:int, notes:string) : void
+        + Escalate() : void
+        + SendNotification() : Task<bool>
+    }
+    
+    ' Enums
+    enum VehicleType {
+        CAR
+        TRUCK
+        VAN
+        MOTORCYCLE
+        BUS
+        EQUIPMENT
+        TRAILER
+        OTHER
+    }
+    
+    enum FuelType {
+        GASOLINE
+        DIESEL
+        ETHANOL
+        HYBRID
+        ELECTRIC
+        GAS
+        HYDROGEN
+        OTHER
+    }
+    
+    enum VehicleStatus {
+        AVAILABLE
+        IN_USE
+        MAINTENANCE
+        BROKEN
+        RESERVED
+        DECOMMISSIONED
+    }
+    
+    enum IoTDeviceType {
+        GPS_TRACKER
+        TEMPERATURE_SENSOR
+        HUMIDITY_SENSOR
+        FUEL_SENSOR
+        SPEED_SENSOR
+        ACCELEROMETER
+        GYROSCOPE
+        CAMERA
+        RFID_READER
+        BLUETOOTH_BEACON
+        TIRE_PRESSURE_SENSOR
+        ENGINE_DIAGNOSTIC
+        OTHER
+    }
+    
+    enum IoTDeviceStatus {
+        ACTIVE
+        INACTIVE
+        MAINTENANCE
+        ERROR
+        OFFLINE
+        BATTERY_LOW
+        CALIBRATING
+    }
+    
+    enum EngineStatus {
+        OFF
+        IDLE
+        RUNNING
+        OVERHEATING
+        ERROR
+    }
+    
+    enum GeofenceType {
+        RESTRICTED_AREA
+        ALLOWED_AREA
+        CUSTOMER_LOCATION
+        DEPOT
+        MAINTENANCE_AREA
+        PARKING_AREA
+        FUEL_STATION
+        CUSTOM
+    }
+    
+    enum GeofenceShape {
+        CIRCLE
+        POLYGON
+        RECTANGLE
+    }
+    
+    enum MaintenanceType {
+        PREVENTIVE
+        CORRECTIVE
+        PREDICTIVE
+        EMERGENCY
+        INSPECTION
+        OIL_CHANGE
+        TIRE_CHANGE
+        BRAKE_SERVICE
+        ENGINE_SERVICE
+        ELECTRICAL_SERVICE
+        BODY_WORK
+        OTHER
+    }
+    
+    enum MaintenanceStatus {
+        SCHEDULED
+        IN_PROGRESS
+        COMPLETED
+        CANCELLED
+        DELAYED
+        PENDING_PARTS
+        PENDING_APPROVAL
+    }
+    
+    enum MaintenancePriority {
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+        EMERGENCY
+    }
+    
+    enum TripType {
+        BUSINESS
+        PERSONAL
+        MAINTENANCE
+        DELIVERY
+        PICKUP
+        EMERGENCY
+        TRAINING
+        OTHER
+    }
+    
+    enum TripStatus {
+        PLANNED
+        APPROVED
+        IN_PROGRESS
+        COMPLETED
+        CANCELLED
+        DELAYED
+        EMERGENCY_STOP
+    }
+    
+    enum SensorType {
+        TEMPERATURE
+        HUMIDITY
+        PRESSURE
+        SPEED
+        ACCELERATION
+        FUEL_LEVEL
+        ENGINE_RPM
+        BATTERY_VOLTAGE
+        GPS_POSITION
+        TIRE_PRESSURE
+        VIBRATION
+        PROXIMITY
+        OTHER
+    }
+    
+    enum DataQuality {
+        EXCELLENT
+        GOOD
+        FAIR
+        POOR
+        INVALID
+    }
+    
+    enum AlarmLevel {
+        INFO
+        WARNING
+        CRITICAL
+        EMERGENCY
+    }
+    
+    enum AlarmType {
+        TEMPERATURE_HIGH
+        TEMPERATURE_LOW
+        FUEL_LOW
+        SPEED_LIMIT_EXCEEDED
+        GEOFENCE_VIOLATION
+        UNAUTHORIZED_USE
+        MAINTENANCE_DUE
+        BATTERY_LOW
+        DEVICE_OFFLINE
+        EMERGENCY_BUTTON
+        ACCIDENT_DETECTED
+        THEFT_ALERT
+        OTHER
+    }
+    
+    enum AlarmSeverity {
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+    }
+    
+    enum AlarmStatus {
+        ACTIVE
+        ACKNOWLEDGED
+        RESOLVED
+        CLOSED
+        ESCALATED
+    }
+    
+    ' Relationships
+    Vehicle ||--o{ VehicleTracking : "tracks"
+    Vehicle ||--o{ VehicleMaintenance : "maintains"
+    Vehicle ||--o{ VehicleTrip : "travels"
+    Vehicle ||--o{ IoTDevice : "monitors"
+    
+    IoTDevice ||--o{ VehicleTracking : "generates"
+    IoTDevice ||--o{ IoTTelemetryData : "collects"
+    IoTDevice ||--o{ IoTAlarm : "triggers"
+    
+    VehicleTracking }o--|| Geofence : "within"
+    
+    IoTTelemetryData ||--o{ IoTAlarm : "generates"
+    
+    Geofence ||--o{ VehicleTracking : "monitors"
+    
+    VehicleTrip }o--|| Vehicle : "uses"
+    
+    VehicleMaintenance }o--|| Vehicle : "services"
+}
+
+@enduml

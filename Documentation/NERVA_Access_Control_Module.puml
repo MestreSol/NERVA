@@ -33,6 +33,8 @@ package "Domain.Common" {
     }
 
     BaseEntity o-- BaseAuditableEntity : "inherits"
+    BaseEvent <|-- INotification : "implements"
+    BaseEntity o-- BaseEvent : "raises"
 }
 
 package "Domain.AccessControl" {
@@ -43,42 +45,41 @@ package "Domain.AccessControl" {
         + IsActive : bool <<get>> <<set>> = true
     }
 
-    class Permission 
+    class Function
     {
         + Name : string <<get>> <<set>>
         + Description : string? <<get>> <<set>>
-        + Resource : string <<get>> <<set>>
-        + Action : string <<get>> <<set>>
+    }
+
+    class Localization
+    {
+        + Locale : string <<get>> <<set>>
+        + IpAddress : string <<get>> <<set>>
+    
+    
+    class Permission 
+    {
+        + Description : string <<get>> <<set>>
     }
 
     class RolePermission 
     {
         + RoleId : GUID <<get>> <<set>>
-        + PermissionId : GUID <<get>> <<set>>
+        + PermissionsId : GUID <<get>> <<set>>
+        + Permissions : Permissions <<get>> <<set>>     
+        + IsActive : bool <<get>> <<set>> = true
+        + AccessRole : Role <<get>> <<set>>
     }
 
-    class EmployeeRole 
+    class AccessLog 
     {
         + EmployeeId : int <<get>> <<set>>
-        + RoleId : int <<get>> <<set>>
-        + IsActive : bool <<get>> <<set>> = true
-    }
-
-    class AccessLog {
-        + EmployeeId : int <<get>> <<set>>
+        + Employee : Employee <<get>> <<set>>
         + Resource : string <<get>> <<set>>
         + Action : string <<get>> <<set>>
-        + Success : bool <<get>> <<set>>
+        + IsSuccess : bool <<get>> <<set>>
         + IpAddress : string? <<get>> <<set>>
-        + UserAgent : string? <<get>> <<set>>
-    }
-    AccessLog --> "AccessDate" DateTime
-    EmployeeRole --> "GrantedDate" DateTime
-    EmployeeRole --> "RevokedDate" DateTime
-}
-
-package "Domain.Employee" {
-    class Employee {
+        + TimeStamp : DateTimeOffset <<get>> <<set>>
     }
 }
 
@@ -95,8 +96,5 @@ Permission ||--o{ RolePermission : "granted to"
 AccessRole ||--o{ EmployeeRole : "assigned to"
 EmployeeRole ||--o{ AccessLog : "generates"
 
-' ===== EXTERNAL REFERENCES =====
-note top of EmployeeRole : References Employee.Id\nfrom Employee domain
-note top of AccessLog : References Employee.Id\nfrom Employee domain
 
 @enduml

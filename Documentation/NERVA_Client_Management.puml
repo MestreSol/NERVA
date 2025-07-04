@@ -1,0 +1,574 @@
+@startuml NERVA_Client_Management
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+skinparam package {
+    BackgroundColor #F3E5F5
+    BorderColor #7B1FA2
+    FontColor #4A148C
+    FontSize 14
+    FontStyle bold
+}
+
+title NERVA - Client Management Module
+
+' ===== CLIENT MANAGEMENT PACKAGE =====
+package "Client Management" as ClientManagement {
+    
+    ' Core Client Entities
+    class Client {
+        + Id : int <<get>> <<set>>
+        + CompanyName : string <<get>> <<set>>
+        + TradeName : string? <<get>> <<set>>
+        + TaxId : string <<get>> <<set>>
+        + StateRegistration : string? <<get>> <<set>>
+        + MunicipalRegistration : string? <<get>> <<set>>
+        + ClientType : ClientType <<get>> <<set>>
+        + CompanySize : CompanySize <<get>> <<set>>
+        + Industry : string <<get>> <<set>>
+        + FoundationDate : DateTimeOffset? <<get>> <<set>>
+        + Website : string? <<get>> <<set>>
+        + Status : ClientStatus <<get>> <<set>>
+        + CreditLimit : decimal? <<get>> <<set>>
+        + CreditUsed : decimal <<get>> <<set>>
+        + PaymentTerms : int <<get>> <<set>>
+        + PreferredPaymentMethod : PaymentMethod <<get>> <<set>>
+        + AccountManagerId : int? <<get>> <<set>>
+        + AssignedTenantId : int? <<get>> <<set>>
+        + ContractStartDate : DateTimeOffset? <<get>> <<set>>
+        + ContractEndDate : DateTimeOffset? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + CalculateAvailableCredit() : decimal
+        + UpdateCreditUsage(amount:decimal) : void
+        + AssignAccountManager(managerId:int) : void
+        + RenewContract(endDate:DateTimeOffset) : void
+        + Suspend(reason:string) : void
+        + Reactivate() : void
+        + GetActiveContracts() : List<ClientContract>
+        + GetTotalRevenue() : decimal
+    }
+    
+    ' Client Contact Information
+    class ClientContact {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + ContactType : ContactType <<get>> <<set>>
+        + FirstName : string <<get>> <<set>>
+        + LastName : string <<get>> <<set>>
+        + Email : string <<get>> <<set>>
+        + Phone : string? <<get>> <<set>>
+        + Mobile : string? <<get>> <<set>>
+        + Position : string? <<get>> <<set>>
+        + Department : string? <<get>> <<set>>
+        + IsPrimary : bool <<get>> <<set>>
+        + IsDecisionMaker : bool <<get>> <<set>>
+        + PreferredContactMethod : ContactMethod <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + GetFullName() : string
+        + GetFormattedPhone() : string
+        + SetAsPrimary() : void
+        + SendEmail(subject:string, body:string) : Task<bool>
+        + SendSMS(message:string) : Task<bool>
+    }
+    
+    ' Client Address
+    class ClientAddress {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + AddressType : AddressType <<get>> <<set>>
+        + Street : string <<get>> <<set>>
+        + Number : string <<get>> <<set>>
+        + Complement : string? <<get>> <<set>>
+        + Neighborhood : string <<get>> <<set>>
+        + City : string <<get>> <<set>>
+        + State : string <<get>> <<set>>
+        + Country : string <<get>> <<set>>
+        + ZipCode : string <<get>> <<set>>
+        + Latitude : decimal? <<get>> <<set>>
+        + Longitude : decimal? <<get>> <<set>>
+        + IsPrimary : bool <<get>> <<set>>
+        + IsDeliveryAddress : bool <<get>> <<set>>
+        + IsBillingAddress : bool <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + GetFormattedAddress() : string
+        + ValidateZipCode() : bool
+        + GetGeolocation() : Task<(decimal lat, decimal lng)>
+        + SetAsPrimary() : void
+    }
+    
+    ' Client Contracts
+    class ClientContract {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + ContractNumber : string <<get>> <<set>>
+        + ContractType : ContractType <<get>> <<set>>
+        + Title : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + StartDate : DateTimeOffset <<get>> <<set>>
+        + EndDate : DateTimeOffset <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + Currency : string <<get>> <<set>>
+        + PaymentTerms : int <<get>> <<set>>
+        + RenewalType : RenewalType <<get>> <<set>>
+        + Status : ContractStatus <<get>> <<set>>
+        + SignedDate : DateTimeOffset? <<get>> <<set>>
+        + SignedBy : string? <<get>> <<set>>
+        + ApprovedBy : int? <<get>> <<set>>
+        + DocumentPath : string? <<get>> <<set>>
+        + Terms : string? <<get>> <<set>>
+        + SLA : string? <<get>> <<set>>
+        + PenaltyClause : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + Sign(signedBy:string) : void
+        + Approve(approverId:int) : void
+        + Renew(endDate:DateTimeOffset) : ClientContract
+        + Terminate(reason:string) : void
+        + AddAmendment(amendment:string) : void
+        + GetRemainingDays() : int
+        + IsNearExpiry(daysBefore:int) : bool
+        + GenerateInvoice() : ClientInvoice
+    }
+    
+    ' Client Services
+    class ClientService {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + ContractId : int? <<get>> <<set>>
+        + ServiceType : ServiceType <<get>> <<set>>
+        + ServiceCode : string <<get>> <<set>>
+        + ServiceName : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + UnitPrice : decimal <<get>> <<set>>
+        + Currency : string <<get>> <<set>>
+        + BillingFrequency : BillingFrequency <<get>> <<set>>
+        + StartDate : DateTimeOffset <<get>> <<set>>
+        + EndDate : DateTimeOffset? <<get>> <<set>>
+        + Quantity : decimal <<get>> <<set>>
+        + Unit : string <<get>> <<set>>
+        + Status : ServiceStatus <<get>> <<set>>
+        + ResponsibleEmployeeId : int? <<get>> <<set>>
+        + IsRecurring : bool <<get>> <<set>>
+        + AutoRenewal : bool <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + CalculateTotal() : decimal
+        + UpdateQuantity(newQuantity:decimal) : void
+        + UpdatePrice(newPrice:decimal) : void
+        + Suspend(reason:string) : void
+        + Resume() : void
+        + Cancel() : void
+        + GetUsageHistory() : List<ServiceUsage>
+    }
+    
+    ' Service Usage Tracking
+    class ServiceUsage {
+        + Id : int <<get>> <<set>>
+        + ServiceId : int <<get>> <<set>>
+        + UsageDate : DateTimeOffset <<get>> <<set>>
+        + UsageType : UsageType <<get>> <<set>>
+        + Quantity : decimal <<get>> <<set>>
+        + Unit : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + UsedBy : int? <<get>> <<set>>
+        + ReferenceId : string? <<get>> <<set>>
+        + Cost : decimal? <<get>> <<set>>
+        + IsChargeable : bool <<get>> <<set>>
+        + InvoiceId : int? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + CalculateCost() : decimal
+        + MarkAsCharged(invoiceId:int) : void
+        + GetUsageDetails() : string
+    }
+    
+    ' Client Invoices
+    class ClientInvoice {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + InvoiceNumber : string <<get>> <<set>>
+        + InvoiceDate : DateTimeOffset <<get>> <<set>>
+        + DueDate : DateTimeOffset <<get>> <<set>>
+        + PeriodStart : DateTimeOffset <<get>> <<set>>
+        + PeriodEnd : DateTimeOffset <<get>> <<set>>
+        + SubTotal : decimal <<get>> <<set>>
+        + TaxAmount : decimal <<get>> <<set>>
+        + DiscountAmount : decimal <<get>> <<set>>
+        + TotalAmount : decimal <<get>> <<set>>
+        + Currency : string <<get>> <<set>>
+        + Status : InvoiceStatus <<get>> <<set>>
+        + PaymentStatus : PaymentStatus <<get>> <<set>>
+        + PaymentMethod : PaymentMethod? <<get>> <<set>>
+        + PaymentDate : DateTimeOffset? <<get>> <<set>>
+        + PaymentReference : string? <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + GeneratedBy : int <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        + UpdatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + CalculateTotal() : decimal
+        + ApplyDiscount(discountPercent:decimal) : void
+        + MarkAsPaid(paymentMethod:PaymentMethod, reference:string) : void
+        + MarkAsOverdue() : void
+        + SendToClient() : Task<bool>
+        + GeneratePDF() : Task<byte[]>
+        + GetPaymentTerms() : int
+    }
+    
+    ' Invoice Items
+    class InvoiceItem {
+        + Id : int <<get>> <<set>>
+        + InvoiceId : int <<get>> <<set>>
+        + ServiceId : int? <<get>> <<set>>
+        + ItemType : InvoiceItemType <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Quantity : decimal <<get>> <<set>>
+        + Unit : string <<get>> <<set>>
+        + UnitPrice : decimal <<get>> <<set>>
+        + Discount : decimal <<get>> <<set>>
+        + TaxRate : decimal <<get>> <<set>>
+        + TotalAmount : decimal <<get>> <<set>>
+        + PeriodStart : DateTimeOffset? <<get>> <<set>>
+        + PeriodEnd : DateTimeOffset? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + CalculateTotal() : decimal
+        + CalculateTax() : decimal
+        + ApplyDiscount(discountPercent:decimal) : void
+    }
+    
+    ' Client Communication
+    class ClientCommunication {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + ContactId : int? <<get>> <<set>>
+        + CommunicationType : CommunicationType <<get>> <<set>>
+        + Direction : CommunicationDirection <<get>> <<set>>
+        + Subject : string <<get>> <<set>>
+        + Content : string <<get>> <<set>>
+        + Channel : CommunicationChannel <<get>> <<set>>
+        + Status : CommunicationStatus <<get>> <<set>>
+        + ScheduledDate : DateTimeOffset? <<get>> <<set>>
+        + SentDate : DateTimeOffset? <<get>> <<set>>
+        + DeliveredDate : DateTimeOffset? <<get>> <<set>>
+        + ReadDate : DateTimeOffset? <<get>> <<set>>
+        + ResponseDate : DateTimeOffset? <<get>> <<set>>
+        + Priority : CommunicationPriority <<get>> <<set>>
+        + EmployeeId : int <<get>> <<set>>
+        + AttachmentPath : string? <<get>> <<set>>
+        + Tags : string? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + Send() : Task<bool>
+        + MarkAsRead() : void
+        + AddResponse(content:string) : void
+        + AttachFile(filePath:string) : void
+        + GetResponseTime() : TimeSpan?
+    }
+    
+    ' Client Feedback
+    class ClientFeedback {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + ServiceId : int? <<get>> <<set>>
+        + FeedbackType : FeedbackType <<get>> <<set>>
+        + Rating : int <<get>> <<set>>
+        + Subject : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Category : string? <<get>> <<set>>
+        + Status : FeedbackStatus <<get>> <<set>>
+        + Priority : FeedbackPriority <<get>> <<set>>
+        + AssignedTo : int? <<get>> <<set>>
+        + ResponseDate : DateTimeOffset? <<get>> <<set>>
+        + Response : string? <<get>> <<set>>
+        + ResolutionDate : DateTimeOffset? <<get>> <<set>>
+        + ResolutionNotes : string? <<get>> <<set>>
+        + FollowUpRequired : bool <<get>> <<set>>
+        + FollowUpDate : DateTimeOffset? <<get>> <<set>>
+        + CreatedAt : DateTimeOffset <<get>> <<set>>
+        --
+        + Assign(employeeId:int) : void
+        + Respond(response:string) : void
+        + Resolve(notes:string) : void
+        + ScheduleFollowUp(date:DateTimeOffset) : void
+        + GetSatisfactionLevel() : string
+    }
+    
+    ' Enums
+    enum ClientType {
+        PROSPECT
+        CUSTOMER
+        PARTNER
+        VENDOR
+        COMPETITOR
+        FORMER_CLIENT
+    }
+    
+    enum CompanySize {
+        STARTUP
+        SMALL
+        MEDIUM
+        LARGE
+        ENTERPRISE
+    }
+    
+    enum ClientStatus {
+        ACTIVE
+        INACTIVE
+        SUSPENDED
+        PROSPECT
+        FORMER_CLIENT
+        BLOCKED
+    }
+    
+    enum PaymentMethod {
+        CREDIT_CARD
+        DEBIT_CARD
+        BANK_TRANSFER
+        CASH
+        CHECK
+        PIX
+        BOLETO
+        WIRE_TRANSFER
+    }
+    
+    enum ContactType {
+        MAIN
+        FINANCIAL
+        TECHNICAL
+        COMMERCIAL
+        LEGAL
+        ADMINISTRATIVE
+        EMERGENCY
+    }
+    
+    enum ContactMethod {
+        EMAIL
+        PHONE
+        SMS
+        WHATSAPP
+        POSTAL_MAIL
+        IN_PERSON
+    }
+    
+    enum AddressType {
+        COMMERCIAL
+        BILLING
+        SHIPPING
+        BRANCH
+        WAREHOUSE
+        HEADQUARTERS
+    }
+    
+    enum ContractType {
+        SERVICE
+        PRODUCT
+        MAINTENANCE
+        SUPPORT
+        LICENSING
+        CONSULTING
+        SUBSCRIPTION
+    }
+    
+    enum RenewalType {
+        AUTOMATIC
+        MANUAL
+        NON_RENEWABLE
+        CONDITIONAL
+    }
+    
+    enum ContractStatus {
+        DRAFT
+        PENDING_APPROVAL
+        SIGNED
+        ACTIVE
+        SUSPENDED
+        EXPIRED
+        TERMINATED
+        CANCELLED
+    }
+    
+    enum ServiceType {
+        CONSULTING
+        SUPPORT
+        MAINTENANCE
+        TRAINING
+        DEVELOPMENT
+        HOSTING
+        LICENSING
+        SUBSCRIPTION
+        CUSTOM
+    }
+    
+    enum BillingFrequency {
+        MONTHLY
+        QUARTERLY
+        SEMI_ANNUALLY
+        ANNUALLY
+        ONE_TIME
+        USAGE_BASED
+    }
+    
+    enum ServiceStatus {
+        ACTIVE
+        INACTIVE
+        SUSPENDED
+        CANCELLED
+        PENDING_ACTIVATION
+        TRIAL
+    }
+    
+    enum UsageType {
+        STANDARD
+        PEAK
+        OFF_PEAK
+        EMERGENCY
+        MAINTENANCE
+        TRAINING
+        TESTING
+    }
+    
+    enum InvoiceStatus {
+        DRAFT
+        PENDING
+        SENT
+        OVERDUE
+        PAID
+        CANCELLED
+        REFUNDED
+    }
+    
+    enum PaymentStatus {
+        PENDING
+        PAID
+        PARTIAL
+        OVERDUE
+        CANCELLED
+        REFUNDED
+    }
+    
+    enum InvoiceItemType {
+        SERVICE
+        PRODUCT
+        DISCOUNT
+        TAX
+        ADJUSTMENT
+        PENALTY
+    }
+    
+    enum CommunicationType {
+        EMAIL
+        PHONE_CALL
+        MEETING
+        PROPOSAL
+        FOLLOW_UP
+        COMPLAINT
+        SUPPORT
+        MARKETING
+    }
+    
+    enum CommunicationDirection {
+        INBOUND
+        OUTBOUND
+    }
+    
+    enum CommunicationChannel {
+        EMAIL
+        PHONE
+        SMS
+        WHATSAPP
+        CHAT
+        IN_PERSON
+        LETTER
+        FAX
+    }
+    
+    enum CommunicationStatus {
+        DRAFT
+        SCHEDULED
+        SENT
+        DELIVERED
+        READ
+        RESPONDED
+        FAILED
+        CANCELLED
+    }
+    
+    enum CommunicationPriority {
+        LOW
+        MEDIUM
+        HIGH
+        URGENT
+    }
+    
+    enum FeedbackType {
+        COMPLAINT
+        SUGGESTION
+        COMPLIMENT
+        SUPPORT_REQUEST
+        FEATURE_REQUEST
+        BUG_REPORT
+        GENERAL
+    }
+    
+    enum FeedbackStatus {
+        NEW
+        ASSIGNED
+        IN_PROGRESS
+        RESOLVED
+        CLOSED
+        ESCALATED
+    }
+    
+    enum FeedbackPriority {
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+    }
+    
+    ' Relationships
+    Client ||--o{ ClientContact : "has"
+    Client ||--o{ ClientAddress : "has"
+    Client ||--o{ ClientContract : "has"
+    Client ||--o{ ClientService : "subscribes"
+    Client ||--o{ ClientInvoice : "receives"
+    Client ||--o{ ClientCommunication : "communicates"
+    Client ||--o{ ClientFeedback : "provides"
+    
+    ClientContract ||--o{ ClientService : "includes"
+    ClientContract ||--o{ ClientInvoice : "generates"
+    
+    ClientService ||--o{ ServiceUsage : "tracks"
+    ClientService ||--o{ ClientFeedback : "evaluates"
+    
+    ClientInvoice ||--o{ InvoiceItem : "contains"
+    
+    ServiceUsage }o--|| ClientInvoice : "billed_in"
+    
+    ClientCommunication }o--|| ClientContact : "with"
+    
+    ClientFeedback }o--|| ClientService : "about"
+}
+
+@enduml

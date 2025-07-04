@@ -1,0 +1,355 @@
+@startuml NERVA_Compliance_Policy_Engine
+!theme plain
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+
+title NERVA - Compliance e Motor de Políticas
+
+package "Compliance & Policy Engine" as CompliancePolicyEngine {
+    
+    class ComplianceRule {
+        + RuleId : int <<get>> <<set>>
+        + RuleName : string <<get>> <<set>>
+        + RuleDescription : string <<get>> <<set>>
+        + RuleType : string <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + Priority : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + EffectiveDate : DateTime <<get>> <<set>>
+        + ExpirationDate : DateTime? <<get>> <<set>>
+        + ApplicableProfiles : string? <<get>> <<set>>
+        + ApplicableDepartments : string? <<get>> <<set>>
+        + ApplicableLocations : string? <<get>> <<set>>
+        + ApplicableCompanies : string? <<get>> <<set>>
+        + RuleCondition : string <<get>> <<set>>
+        + RuleAction : string <<get>> <<set>>
+        + ViolationSeverity : string <<get>> <<set>>
+        + AutomaticEnforcement : bool <<get>> <<set>>
+        + RequiresApproval : bool <<get>> <<set>>
+        + NotificationRequired : bool <<get>> <<set>>
+        + GetViolations() : List<PolicyViolation>
+        + GetExceptions() : List<ExceptionRequest>
+        + ValidateRule(context:RuleContext) : RuleValidationResult
+        + ExecuteRule(context:RuleContext) : RuleExecutionResult
+        + IsApplicable(userId:int, context:RuleContext) : bool
+        + GetApplicableUsers() : List<Employee>
+    }
+    
+    class PolicyViolation {
+        + ViolationId : int <<get>> <<set>>
+        + RuleId : int <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + ViolationDate : DateTime <<get>> <<set>>
+        + ViolationType : string <<get>> <<set>>
+        + Severity : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Context : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + DetectedBy : string <<get>> <<set>>
+        + AutoDetected : bool <<get>> <<set>>
+        + ResolvedDate : DateTime? <<get>> <<set>>
+        + ResolvedById : int? <<get>> <<set>>
+        + ResolutionNotes : string? <<get>> <<set>>
+        + PenaltyApplied : bool <<get>> <<set>>
+        + PenaltyAmount : decimal? <<get>> <<set>>
+        + GetRule() : ComplianceRule
+        + GetUser() : Employee
+        + GetResolvedBy() : Employee?
+        + GetEscalations() : List<ViolationEscalation>
+        + IsResolved() : bool
+        + RequiresEscalation() : bool
+        + CalculatePenalty() : decimal
+    }
+    
+    class ExceptionRequest {
+        + RequestId : int <<get>> <<set>>
+        + RuleId : int <<get>> <<set>>
+        + RequesterId : int <<get>> <<set>>
+        + RequestDate : DateTime <<get>> <<set>>
+        + RequestType : string <<get>> <<set>>
+        + Justification : string <<get>> <<set>>
+        + ProposedStartDate : DateTime <<get>> <<set>>
+        + ProposedEndDate : DateTime? <<get>> <<set>>
+        + BusinessImpact : string? <<get>> <<set>>
+        + RiskAssessment : string? <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + ApprovedById : int? <<get>> <<set>>
+        + ApprovalDate : DateTime? <<get>> <<set>>
+        + ApprovalConditions : string? <<get>> <<set>>
+        + RejectionReason : string? <<get>> <<set>>
+        + ImplementedDate : DateTime? <<get>> <<set>>
+        + ExpirationDate : DateTime? <<get>> <<set>>
+        + GetRule() : ComplianceRule
+        + GetRequester() : Employee
+        + GetApprovedBy() : Employee?
+        + GetApprovalWorkflow() : ApprovalRequest?
+        + IsApproved() : bool
+        + IsExpired() : bool
+        + IsActive() : bool
+    }
+    
+    class ComplianceReport {
+        + ReportId : int <<get>> <<set>>
+        + ReportName : string <<get>> <<set>>
+        + ReportType : string <<get>> <<set>>
+        + ReportPeriod : string <<get>> <<set>>
+        + StartDate : DateTime <<get>> <<set>>
+        + EndDate : DateTime <<get>> <<set>>
+        + GeneratedDate : DateTime <<get>> <<set>>
+        + GeneratedById : int <<get>> <<set>>
+        + TotalRules : int <<get>> <<set>>
+        + TotalViolations : int <<get>> <<set>>
+        + HighSeverityViolations : int <<get>> <<set>>
+        + MediumSeverityViolations : int <<get>> <<set>>
+        + LowSeverityViolations : int <<get>> <<set>>
+        + ComplianceScore : decimal <<get>> <<set>>
+        + ReportData : string <<get>> <<set>>
+        + FilePath : string? <<get>> <<set>>
+        + GetGeneratedBy() : Employee
+        + GetViolationsByRule() : Dictionary<int, int>
+        + GetViolationsByDepartment() : Dictionary<string, int>
+        + GetComplianceTrend() : List<ComplianceTrendData>
+    }
+    
+    class RuleContext {
+        + ContextId : int <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + Action : string <<get>> <<set>>
+        + Resource : string? <<get>> <<set>>
+        + Location : string? <<get>> <<set>>
+        + Timestamp : DateTime <<get>> <<set>>
+        + AdditionalData : string? <<get>> <<set>>
+        + GetUser() : Employee
+        + GetContextData() : Dictionary<string, object>
+        + SetContextData(key:string, value:object) : void
+    }
+    
+    class RuleEngine {
+        + EngineId : int <<get>> <<set>>
+        + EngineName : string <<get>> <<set>>
+        + EngineType : string <<get>> <<set>>
+        + Version : string <<get>> <<set>>
+        + Configuration : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + LastExecutionDate : DateTime? <<get>> <<set>>
+        + EvaluateRules(context:RuleContext) : List<RuleEvaluationResult>
+        + ExecuteRule(rule:ComplianceRule, context:RuleContext) : RuleExecutionResult
+        + GetApplicableRules(context:RuleContext) : List<ComplianceRule>
+        + ValidateRuleExpression(expression:string) : bool
+    }
+    
+    class RuleEvaluationResult {
+        + ResultId : int <<get>> <<set>>
+        + RuleId : int <<get>> <<set>>
+        + ContextId : int <<get>> <<set>>
+        + EvaluationDate : DateTime <<get>> <<set>>
+        + Result : bool <<get>> <<set>>
+        + Message : string? <<get>> <<set>>
+        + ExecutionTime : TimeSpan <<get>> <<set>>
+        + GetRule() : ComplianceRule
+        + GetContext() : RuleContext
+    }
+    
+    class RuleExecutionResult {
+        + ResultId : int <<get>> <<set>>
+        + RuleId : int <<get>> <<set>>
+        + ContextId : int <<get>> <<set>>
+        + ExecutionDate : DateTime <<get>> <<set>>
+        + Success : bool <<get>> <<set>>
+        + ActionTaken : string? <<get>> <<set>>
+        + Message : string? <<get>> <<set>>
+        + ExecutionTime : TimeSpan <<get>> <<set>>
+        + GetRule() : ComplianceRule
+        + GetContext() : RuleContext
+    }
+    
+    class ViolationEscalation {
+        + EscalationId : int <<get>> <<set>>
+        + ViolationId : int <<get>> <<set>>
+        + EscalationLevel : int <<get>> <<set>>
+        + EscalatedToId : int <<get>> <<set>>
+        + EscalationDate : DateTime <<get>> <<set>>
+        + EscalationReason : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + ResponseDate : DateTime? <<get>> <<set>>
+        + ResponseNotes : string? <<get>> <<set>>
+        + GetViolation() : PolicyViolation
+        + GetEscalatedTo() : Employee
+        + IsResolved() : bool
+    }
+    
+    class ComplianceAudit {
+        + AuditId : int <<get>> <<set>>
+        + AuditName : string <<get>> <<set>>
+        + AuditType : string <<get>> <<set>>
+        + AuditorId : int <<get>> <<set>>
+        + StartDate : DateTime <<get>> <<set>>
+        + EndDate : DateTime? <<get>> <<set>>
+        + Scope : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + Findings : string? <<get>> <<set>>
+        + Recommendations : string? <<get>> <<set>>
+        + ComplianceScore : decimal? <<get>> <<set>>
+        + GetAuditor() : Employee
+        + GetAuditItems() : List<ComplianceAuditItem>
+        + IsCompleted() : bool
+    }
+    
+    class ComplianceAuditItem {
+        + ItemId : int <<get>> <<set>>
+        + AuditId : int <<get>> <<set>>
+        + RuleId : int <<get>> <<set>>
+        + ItemDescription : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + Finding : string? <<get>> <<set>>
+        + Recommendation : string? <<get>> <<set>>
+        + Priority : string <<get>> <<set>>
+        + ResponsibleId : int? <<get>> <<set>>
+        + DueDate : DateTime? <<get>> <<set>>
+        + GetAudit() : ComplianceAudit
+        + GetRule() : ComplianceRule
+        + GetResponsible() : Employee?
+    }
+    
+    class ComplianceTraining {
+        + TrainingId : int <<get>> <<set>>
+        + TrainingName : string <<get>> <<set>>
+        + TrainingType : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Duration : TimeSpan <<get>> <<set>>
+        + RequiredFor : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetEnrollments() : List<ComplianceTrainingEnrollment>
+        + GetCompletionRate() : decimal
+    }
+    
+    class ComplianceTrainingEnrollment {
+        + EnrollmentId : int <<get>> <<set>>
+        + TrainingId : int <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + EnrollmentDate : DateTime <<get>> <<set>>
+        + DueDate : DateTime <<get>> <<set>>
+        + CompletionDate : DateTime? <<get>> <<set>>
+        + Score : decimal? <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + GetTraining() : ComplianceTraining
+        + GetUser() : Employee
+        + IsCompleted() : bool
+        + IsOverdue() : bool
+    }
+    
+    ' Enums
+    enum RuleType {
+        Access = 0,
+        Behavior = 1,
+        Time = 2,
+        Location = 3,
+        Resource = 4,
+        Data = 5,
+        Process = 6
+    }
+    
+    enum ViolationSeverity {
+        Low = 0,
+        Medium = 1,
+        High = 2,
+        Critical = 3
+    }
+    
+    enum ViolationStatus {
+        Open = 0,
+        InProgress = 1,
+        Resolved = 2,
+        Escalated = 3,
+        Closed = 4
+    }
+    
+    enum ExceptionStatus {
+        Pending = 0,
+        UnderReview = 1,
+        Approved = 2,
+        Rejected = 3,
+        Expired = 4,
+        Revoked = 5
+    }
+    
+    ' Base Entity Relationships
+    BaseAuditableEntity <|-- ComplianceRule
+    BaseAuditableEntity <|-- PolicyViolation
+    BaseAuditableEntity <|-- ExceptionRequest
+    BaseAuditableEntity <|-- ComplianceReport
+    BaseAuditableEntity <|-- RuleContext
+    BaseAuditableEntity <|-- RuleEngine
+    BaseAuditableEntity <|-- RuleEvaluationResult
+    BaseAuditableEntity <|-- RuleExecutionResult
+    BaseAuditableEntity <|-- ViolationEscalation
+    BaseAuditableEntity <|-- ComplianceAudit
+    BaseAuditableEntity <|-- ComplianceAuditItem
+    BaseAuditableEntity <|-- ComplianceTraining
+    BaseAuditableEntity <|-- ComplianceTrainingEnrollment
+    
+    ' Internal Relationships
+    ComplianceRule ||--o{ PolicyViolation : "violated"
+    ComplianceRule ||--o{ ExceptionRequest : "exceptions"
+    ComplianceRule ||--o{ RuleEvaluationResult : "evaluations"
+    ComplianceRule ||--o{ RuleExecutionResult : "executions"
+    ComplianceRule ||--o{ ComplianceAuditItem : "audited"
+    
+    PolicyViolation }o--|| ComplianceRule : "violates"
+    PolicyViolation }o--|| Employee : "by user"
+    PolicyViolation }o--o| Employee : "resolved by"
+    PolicyViolation ||--o{ ViolationEscalation : "escalations"
+    
+    ExceptionRequest }o--|| ComplianceRule : "exception for"
+    ExceptionRequest }o--|| Employee : "requested by"
+    ExceptionRequest }o--o| Employee : "approved by"
+    
+    ComplianceReport }o--|| Employee : "generated by"
+    
+    RuleContext }o--|| Employee : "for user"
+    RuleContext ||--o{ RuleEvaluationResult : "evaluations"
+    RuleContext ||--o{ RuleExecutionResult : "executions"
+    
+    RuleEvaluationResult }o--|| ComplianceRule : "evaluates"
+    RuleEvaluationResult }o--|| RuleContext : "in context"
+    
+    RuleExecutionResult }o--|| ComplianceRule : "executes"
+    RuleExecutionResult }o--|| RuleContext : "in context"
+    
+    ViolationEscalation }o--|| PolicyViolation : "escalates"
+    ViolationEscalation }o--|| Employee : "escalated to"
+    
+    ComplianceAudit }o--|| Employee : "audited by"
+    ComplianceAudit ||--o{ ComplianceAuditItem : "items"
+    
+    ComplianceAuditItem }o--|| ComplianceAudit : "belongs to"
+    ComplianceAuditItem }o--|| ComplianceRule : "audits"
+    ComplianceAuditItem }o--o| Employee : "responsible"
+    
+    ComplianceTraining ||--o{ ComplianceTrainingEnrollment : "enrollments"
+    
+    ComplianceTrainingEnrollment }o--|| ComplianceTraining : "enrolled in"
+    ComplianceTrainingEnrollment }o--|| Employee : "enrolled user"
+}
+
+' External Relationships Notes
+note right of ComplianceRule
+    Integra com:
+    - Access Control (regras de acesso)
+    - Employee Management (usuários)
+    - Approval Workflow (exceções)
+    - Kafka (monitoramento tempo real)
+end note
+
+note right of PolicyViolation
+    Integra com:
+    - KPI Analytics (métricas)
+    - Incident Management (incidentes)
+    - Notification System (alertas)
+end note
+
+@enduml

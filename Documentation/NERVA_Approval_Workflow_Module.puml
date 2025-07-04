@@ -1,0 +1,104 @@
+@startuml NERVA_Approval_Workflow_Module
+!define NERVA_APPROVAL_WORKFLOW
+
+title NERVA - APPROVAL WORKFLOW MODULE
+
+package "Domain.Common" {
+    abstract class BaseEntity {
+        + Id : int <<get>> <<set>>
+        + DomainEvents : IReadOnlyCollection<BaseEvent> <<get>> <<set>>
+        void AddDomainEvent(BaseEvent event) <<add>>
+        void RemoveDomainEvent(BaseEvent event) <<remove>>
+        void ClearDomainEvents() <<clear>>
+    }
+
+    abstract class BaseAuditableEntity {
+        + CreatedBy : string <<get>> <<set>>
+        + CreatedDate : DateTime <<get>> <<set>>
+        + LastModifiedBy : string? <<get>> <<set>>
+        + LastModifiedDate : DateTime? <<get>> <<set>>
+    }
+
+    abstract class BaseEvent {
+    }
+
+    interface INotification {
+    }
+
+    BaseEntity o-- BaseAuditableEntity : "inherits"
+}  
+
+' ===== APPROVAL WORKFLOW ENTITIES =====
+class ApprovalWorkflow {
+    + Name : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + EntityType : string <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+
+class ApprovalStep {
+    + WorkflowId : int <<get>> <<set>>
+    + StepOrder : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + RequiredApprovals : int <<get>> <<set>> = 1
+    + IsActive : bool <<get>> <<set>> = true
+}
+
+class ApprovalRequest {
+    + WorkflowId : int <<get>> <<set>>
+    + EntityId : int <<get>> <<set>>
+    + EntityType : string <<get>> <<set>>
+    + RequesterId : int <<get>> <<set>>
+    + RequestReason : string? <<get>> <<set>>
+    + RequestData : string <<get>> <<set>>
+    + CurrentStepId : int? <<get>> <<set>>
+}
+ApprovalRequest --> "Status" ApprovalStatus
+ApprovalRequest --> "SubmittedDate" DateTime
+ApprovalRequest --> "CompletedDate" DateTime
+
+enum ApprovalStatus {
+    Pending = 0,
+    InProgress = 1,
+    Approved = 2,
+    Rejected = 3,
+    Cancelled = 4
+}
+
+class ApprovalAction {
+    + RequestId : int <<get>> <<set>>
+    + StepId : int <<get>> <<set>>
+    + ApproverId : int <<get>> <<set>>
+    + Comments : string? <<get>> <<set>>
+}
+ApprovalAction --> "Decision" ApprovalDecision
+ApprovalAction --> "ActionDate" DateTime
+
+enum ApprovalDecision {
+    Approve = 0,
+    Reject = 1,
+    RequestInfo = 2
+}
+
+' ===== RELATIONSHIPS =====
+ApprovalWorkflow ||--o{ ApprovalStep : "contains"
+ApprovalWorkflow ||--o{ ApprovalRequest : "follows"
+ApprovalStep ||--o{ ApprovalAction : "processed in"
+ApprovalRequest ||--o{ ApprovalAction : "has actions"
+ApprovalStep --> "ApproverRole" AccessRole
+ApprovalRequest --> "Requester" Employee
+ApprovalAction --> "Approver" Employee
+
+' ===== EXTERNAL REFERENCES =====
+class Employee {
+    + EmployeeNumber : string
+    + FirstName : string
+    + LastName : string
+}
+
+class AccessRole {
+    + Name : string
+    + Description : string
+}
+
+@enduml

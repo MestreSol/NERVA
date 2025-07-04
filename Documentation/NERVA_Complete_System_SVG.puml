@@ -1,0 +1,1499 @@
+@startuml NERVA_Complete_System_Diagram
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam dpi 600
+scale 2
+skinparam backgroundColor #FFFFFF
+skinparam class {
+    BackgroundColor #E8F4FD
+    BorderColor #1E88E5
+    ArrowColor #1976D2
+}
+skinparam package {
+    BackgroundColor #F3E5F5
+    BorderColor #7B1FA2
+    FontColor #4A148C
+    FontSize 14
+    FontStyle bold
+}
+
+title NERVA - Sistema de Gestão Empresarial Completo
+left to right direction
+
+' ===== CORE FRAMEWORK PACKAGE =====
+package "Core Framework" as CoreFramework {
+    abstract class BaseEntity {
+        + Id : int <<get>> <<set>>
+        + AddDomainEvent(domainEvent:BaseEvent) : void
+        + RemoveDomainEvent(domainEvent:BaseEvent) : void
+        + ClearDomainEvents() : void
+    }
+    
+    abstract class BaseAuditableEntity {
+        + CreatedBy : string? <<get>> <<set>>
+        + LastModifiedBy : string? <<get>> <<set>>
+        + Created : DateTimeOffset <<get>> <<set>>
+        + LastModified : DateTimeOffset <<get>> <<set>>
+    }
+    
+    abstract class BaseEvent {
+    }
+    
+    abstract class ValueObject {
+        # {static} EqualOperator(left:ValueObject, right:ValueObject) : bool
+        # {static} NotEqualOperator(left:ValueObject, right:ValueObject) : bool
+        # {abstract} GetEqualityComponents() : IEnumerable<object>
+        + <<override>> Equals(obj:object?) : bool
+        + <<override>> GetHashCode() : int
+    }
+    
+    BaseEntity <|-- BaseAuditableEntity
+    INotification <|-- BaseEvent
+}
+
+' ===== EMPLOYEE MANAGEMENT PACKAGE =====
+package "Employee Management" as EmployeeManagement {
+    class Employee {
+        + EmployeeId : int <<get>> <<set>>
+        + FirstName : string <<get>> <<set>>
+        + LastName : string <<get>> <<set>>
+        + Email : string <<get>> <<set>>
+        + Phone : string <<get>> <<set>>
+        + DateOfBirth : DateTime <<get>> <<set>>
+        + HireDate : DateTime <<get>> <<set>>
+        + CurrentStatusId : int <<get>> <<set>>
+        + DepartmentId : int <<get>> <<set>>
+        + PositionId : int <<get>> <<set>>
+        + SupervisorId : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + PersonalDocument : string <<get>> <<set>>
+        + Address : string <<get>> <<set>>
+        + EmergencyContactName : string <<get>> <<set>>
+        + EmergencyContactPhone : string <<get>> <<set>>
+        + Salary : decimal <<get>> <<set>>
+        + ContractType : string <<get>> <<set>>
+        + GetFullName() : string
+        + GetCurrentStatus() : EmployeeStatus
+        + GetCurrentPosition() : Position
+        + GetDepartment() : Department
+        + GetSupervisor() : Employee?
+        + GetSubordinates() : List<Employee>
+        + GetEmployeeRoles() : List<EmployeeRole>
+        + GetWorkPlaceAssignments() : List<WorkPlaceAssignment>
+        + GetActiveWorkPlace() : WorkPlace?
+    }
+    
+    class Department {
+        + DepartmentId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + ManagerId : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetManager() : Employee?
+        + GetEmployees() : List<Employee>
+        + GetPositions() : List<Position>
+    }
+    
+    class Position {
+        + PositionId : int <<get>> <<set>>
+        + Title : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + DepartmentId : int <<get>> <<set>>
+        + Level : int <<get>> <<set>>
+        + MinSalary : decimal <<get>> <<set>>
+        + MaxSalary : decimal <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetDepartment() : Department
+        + GetEmployees() : List<Employee>
+    }
+    
+    class EmployeeStatus {
+        + StatusId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + RequiresApproval : bool <<get>> <<set>>
+        + GetEmployees() : List<Employee>
+        + GetStatusHistories() : List<EmployeeStatusHistory>
+    }
+    
+    class EmployeeStatusHistory {
+        + HistoryId : int <<get>> <<set>>
+        + EmployeeId : int <<get>> <<set>>
+        + StatusId : int <<get>> <<set>>
+        + StartDate : DateTime <<get>> <<set>>
+        + EndDate : DateTime? <<get>> <<set>>
+        + Reason : string <<get>> <<set>>
+        + ApprovedBy : int? <<get>> <<set>>
+        + ApprovalDate : DateTime? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetEmployee() : Employee
+        + GetStatus() : EmployeeStatus
+        + GetApprover() : Employee?
+    }
+    
+    class EmployeeDocument {
+        + DocumentId : int <<get>> <<set>>
+        + EmployeeId : int <<get>> <<set>>
+        + DocumentType : string <<get>> <<set>>
+        + DocumentNumber : string <<get>> <<set>>
+        + IssueDate : DateTime <<get>> <<set>>
+        + ExpiryDate : DateTime? <<get>> <<set>>
+        + IssuingAuthority : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetEmployee() : Employee
+    }
+    
+    BaseAuditableEntity <|-- Employee
+    BaseAuditableEntity <|-- Department
+    BaseAuditableEntity <|-- Position
+    BaseAuditableEntity <|-- EmployeeStatus
+    BaseAuditableEntity <|-- EmployeeStatusHistory
+    BaseAuditableEntity <|-- EmployeeDocument
+    
+    Employee }o--|| Department : "belongs to"
+    Employee }o--|| Position : "has"
+    Employee }o--|| EmployeeStatus : "has current"
+    Employee }o--o{ Employee : "supervises"
+    Employee ||--o{ EmployeeStatusHistory : "has history"
+    Employee ||--o{ EmployeeDocument : "has documents"
+    Department }o--o| Employee : "managed by"
+    Department ||--o{ Position : "contains"
+    Position }o--|| Department : "belongs to"
+    EmployeeStatusHistory }o--|| Employee : "belongs to"
+    EmployeeStatusHistory }o--|| EmployeeStatus : "has status"
+    EmployeeStatusHistory }o--o| Employee : "approved by"
+    EmployeeDocument }o--|| Employee : "belongs to"
+}
+
+' ===== ACCESS CONTROL PACKAGE =====
+package "Access Control" as AccessControl {
+    class AccessRole {
+        + RoleId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetPermissions() : List<Permission>
+        + GetEmployees() : List<Employee>
+        + GetRolePermissions() : List<RolePermission>
+        + GetEmployeeRoles() : List<EmployeeRole>
+    }
+    
+    class Permission {
+        + PermissionId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Resource : string <<get>> <<set>>
+        + Action : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetRoles() : List<AccessRole>
+        + GetRolePermissions() : List<RolePermission>
+    }
+    
+    class RolePermission {
+        + RoleId : int <<get>> <<set>>
+        + PermissionId : int <<get>> <<set>>
+        + GrantedDate : DateTime <<get>> <<set>>
+        + GrantedBy : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetRole() : AccessRole
+        + GetPermission() : Permission
+        + GetGrantedByEmployee() : Employee
+    }
+    
+    class EmployeeRole {
+        + EmployeeId : int <<get>> <<set>>
+        + RoleId : int <<get>> <<set>>
+        + AssignedDate : DateTime <<get>> <<set>>
+        + AssignedBy : int <<get>> <<set>>
+        + ExpiryDate : DateTime? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetEmployee() : Employee
+        + GetRole() : AccessRole
+        + GetAssignedByEmployee() : Employee
+    }
+    
+    class AccessLog {
+        + LogId : int <<get>> <<set>>
+        + EmployeeId : int <<get>> <<set>>
+        + Resource : string <<get>> <<set>>
+        + Action : string <<get>> <<set>>
+        + AccessTime : DateTime <<get>> <<set>>
+        + IpAddress : string <<get>> <<set>>
+        + UserAgent : string <<get>> <<set>>
+        + Success : bool <<get>> <<set>>
+        + FailureReason : string? <<get>> <<set>>
+        + GetEmployee() : Employee
+    }
+    
+    class SecurityPolicy {
+        + PolicyId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + PolicyType : string <<get>> <<set>>
+        + Rules : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + EffectiveDate : DateTime <<get>> <<set>>
+        + ExpiryDate : DateTime? <<get>> <<set>>
+    }
+    
+    BaseAuditableEntity <|-- AccessRole
+    BaseAuditableEntity <|-- Permission
+    BaseAuditableEntity <|-- RolePermission
+    BaseAuditableEntity <|-- EmployeeRole
+    BaseAuditableEntity <|-- AccessLog
+    BaseAuditableEntity <|-- SecurityPolicy
+    
+    AccessRole ||--o{ RolePermission : "has"
+    Permission ||--o{ RolePermission : "granted to"
+    AccessRole ||--o{ EmployeeRole : "assigned to"
+    RolePermission }o--|| AccessRole : "belongs to"
+    RolePermission }o--|| Permission : "grants"
+    EmployeeRole }o--|| AccessRole : "has"
+    AccessLog }o--|| Employee : "logged by"
+}
+
+' ===== APPROVAL WORKFLOW PACKAGE =====
+package "Approval Workflow" as ApprovalWorkflow {
+    class ApprovalWorkflow {
+        + WorkflowId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + WorkflowType : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetSteps() : List<ApprovalStep>
+        + GetRequests() : List<ApprovalRequest>
+    }
+    
+    class ApprovalStep {
+        + StepId : int <<get>> <<set>>
+        + WorkflowId : int <<get>> <<set>>
+        + StepOrder : int <<get>> <<set>>
+        + StepName : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + ApproverRoleId : int <<get>> <<set>>
+        + IsOptional : bool <<get>> <<set>>
+        + RequiredApprovals : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetWorkflow() : ApprovalWorkflow
+        + GetApproverRole() : AccessRole
+        + GetApprovalActions() : List<ApprovalAction>
+    }
+    
+    class ApprovalRequest {
+        + RequestId : int <<get>> <<set>>
+        + WorkflowId : int <<get>> <<set>>
+        + RequestedBy : int <<get>> <<set>>
+        + RequestType : string <<get>> <<set>>
+        + RequestData : string <<get>> <<set>>
+        + RequestDate : DateTime <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + CompletedDate : DateTime? <<get>> <<set>>
+        + CurrentStepId : int? <<get>> <<set>>
+        + Priority : int <<get>> <<set>>
+        + GetWorkflow() : ApprovalWorkflow
+        + GetRequestedByEmployee() : Employee
+        + GetCurrentStep() : ApprovalStep?
+        + GetApprovalActions() : List<ApprovalAction>
+    }
+    
+    class ApprovalAction {
+        + ActionId : int <<get>> <<set>>
+        + RequestId : int <<get>> <<set>>
+        + StepId : int <<get>> <<set>>
+        + ApprovedBy : int <<get>> <<set>>
+        + Action : string <<get>> <<set>>
+        + Comments : string? <<get>> <<set>>
+        + ActionDate : DateTime <<get>> <<set>>
+        + GetRequest() : ApprovalRequest
+        + GetStep() : ApprovalStep
+        + GetApproverEmployee() : Employee
+    }
+    
+    class ApprovalTemplate {
+        + TemplateId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + TemplateType : string <<get>> <<set>>
+        + Fields : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetApprovalRequests() : List<ApprovalRequest>
+    }
+    
+    class ApprovalNotification {
+        + NotificationId : int <<get>> <<set>>
+        + RequestId : int <<get>> <<set>>
+        + RecipientId : int <<get>> <<set>>
+        + NotificationType : string <<get>> <<set>>
+        + Subject : string <<get>> <<set>>
+        + Message : string <<get>> <<set>>
+        + SentDate : DateTime <<get>> <<set>>
+        + ReadDate : DateTime? <<get>> <<set>>
+        + IsRead : bool <<get>> <<set>>
+        + GetRequest() : ApprovalRequest
+        + GetRecipient() : Employee
+    }
+    
+    BaseAuditableEntity <|-- ApprovalWorkflow
+    BaseAuditableEntity <|-- ApprovalStep
+    BaseAuditableEntity <|-- ApprovalRequest
+    BaseAuditableEntity <|-- ApprovalAction
+    BaseAuditableEntity <|-- ApprovalTemplate
+    BaseAuditableEntity <|-- ApprovalNotification
+    
+    ApprovalWorkflow ||--o{ ApprovalStep : "has"
+    ApprovalWorkflow ||--o{ ApprovalRequest : "processes"
+    ApprovalStep }o--|| ApprovalWorkflow : "belongs to"
+    ApprovalStep }o--|| AccessRole : "approved by"
+    ApprovalStep ||--o{ ApprovalAction : "has actions"
+    ApprovalRequest }o--|| ApprovalWorkflow : "uses"
+    ApprovalRequest }o--|| Employee : "requested by"
+    ApprovalRequest }o--o| ApprovalStep : "current step"
+    ApprovalRequest ||--o{ ApprovalAction : "has actions"
+    ApprovalRequest ||--o{ ApprovalNotification : "generates"
+    ApprovalAction }o--|| ApprovalRequest : "for"
+    ApprovalAction }o--|| ApprovalStep : "at"
+    ApprovalAction }o--|| Employee : "approved by"
+    ApprovalNotification }o--|| ApprovalRequest : "about"
+    ApprovalNotification }o--|| Employee : "sent to"
+}
+
+' ===== LOGISTICS PACKAGE =====
+package "Logistics" as Logistics {
+    class Warehouse {
+        + WarehouseId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Address : string <<get>> <<set>>
+        + City : string <<get>> <<set>>
+        + State : string <<get>> <<set>>
+        + ZipCode : string <<get>> <<set>>
+        + Country : string <<get>> <<set>>
+        + ManagerId : int? <<get>> <<set>>
+        + Capacity : decimal <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetManager() : Employee?
+        + GetInventoryItems() : List<Inventory>
+        + GetWarehouseLocations() : List<WarehouseLocation>
+    }
+    
+    class WarehouseLocation {
+        + LocationId : int <<get>> <<set>>
+        + WarehouseId : int <<get>> <<set>>
+        + Zone : string <<get>> <<set>>
+        + Aisle : string <<get>> <<set>>
+        + Shelf : string <<get>> <<set>>
+        + Position : string <<get>> <<set>>
+        + LocationCode : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetWarehouse() : Warehouse
+        + GetInventoryItems() : List<Inventory>
+    }
+    
+    class Product {
+        + ProductId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + SKU : string <<get>> <<set>>
+        + CategoryId : int <<get>> <<set>>
+        + UnitOfMeasure : string <<get>> <<set>>
+        + Weight : decimal <<get>> <<set>>
+        + Dimensions : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetCategory() : ProductCategory
+        + GetInventoryItems() : List<Inventory>
+        + GetPurchaseOrderItems() : List<PurchaseOrderItem>
+    }
+    
+    class ProductCategory {
+        + CategoryId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + ParentCategoryId : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetParentCategory() : ProductCategory?
+        + GetSubCategories() : List<ProductCategory>
+        + GetProducts() : List<Product>
+    }
+    
+    class Inventory {
+        + InventoryId : int <<get>> <<set>>
+        + ProductId : int <<get>> <<set>>
+        + WarehouseId : int <<get>> <<set>>
+        + LocationId : int? <<get>> <<set>>
+        + Quantity : decimal <<get>> <<set>>
+        + ReservedQuantity : decimal <<get>> <<set>>
+        + MinimumStock : decimal <<get>> <<set>>
+        + MaximumStock : decimal <<get>> <<set>>
+        + UnitCost : decimal <<get>> <<set>>
+        + LastRestockDate : DateTime? <<get>> <<set>>
+        + GetProduct() : Product
+        + GetWarehouse() : Warehouse
+        + GetLocation() : WarehouseLocation?
+        + GetAvailableQuantity() : decimal
+        + GetStockMovements() : List<StockMovement>
+    }
+    
+    class StockMovement {
+        + MovementId : int <<get>> <<set>>
+        + InventoryId : int <<get>> <<set>>
+        + MovementType : string <<get>> <<set>>
+        + Quantity : decimal <<get>> <<set>>
+        + MovementDate : DateTime <<get>> <<set>>
+        + Reference : string <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + GetInventory() : Inventory
+        + GetUser() : Employee
+    }
+    
+    class Supplier {
+        + SupplierId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + ContactName : string <<get>> <<set>>
+        + Email : string <<get>> <<set>>
+        + Phone : string <<get>> <<set>>
+        + Address : string <<get>> <<set>>
+        + City : string <<get>> <<set>>
+        + State : string <<get>> <<set>>
+        + ZipCode : string <<get>> <<set>>
+        + Country : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetPurchaseOrders() : List<PurchaseOrder>
+    }
+    
+    class PurchaseOrder {
+        + OrderId : int <<get>> <<set>>
+        + OrderNumber : string <<get>> <<set>>
+        + SupplierId : int <<get>> <<set>>
+        + OrderDate : DateTime <<get>> <<set>>
+        + ExpectedDeliveryDate : DateTime? <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + TotalAmount : decimal <<get>> <<set>>
+        + RequestedBy : int <<get>> <<set>>
+        + ApprovedBy : int? <<get>> <<set>>
+        + ApprovalDate : DateTime? <<get>> <<set>>
+        + GetSupplier() : Supplier
+        + GetRequestedByEmployee() : Employee
+        + GetApprovedByEmployee() : Employee?
+        + GetOrderItems() : List<PurchaseOrderItem>
+    }
+    
+    class PurchaseOrderItem {
+        + OrderItemId : int <<get>> <<set>>
+        + OrderId : int <<get>> <<set>>
+        + ProductId : int <<get>> <<set>>
+        + Quantity : decimal <<get>> <<set>>
+        + UnitPrice : decimal <<get>> <<set>>
+        + TotalPrice : decimal <<get>> <<set>>
+        + ReceivedQuantity : decimal <<get>> <<set>>
+        + GetOrder() : PurchaseOrder
+        + GetProduct() : Product
+    }
+    
+    BaseAuditableEntity <|-- Warehouse
+    BaseAuditableEntity <|-- WarehouseLocation
+    BaseAuditableEntity <|-- Product
+    BaseAuditableEntity <|-- ProductCategory
+    BaseAuditableEntity <|-- Inventory
+    BaseAuditableEntity <|-- StockMovement
+    BaseAuditableEntity <|-- Supplier
+    BaseAuditableEntity <|-- PurchaseOrder
+    BaseAuditableEntity <|-- PurchaseOrderItem
+    
+    Warehouse }o--o| Employee : "managed by"
+    Warehouse ||--o{ WarehouseLocation : "has locations"
+    Warehouse ||--o{ Inventory : "stores"
+    WarehouseLocation }o--|| Warehouse : "belongs to"
+    WarehouseLocation ||--o{ Inventory : "contains"
+    Product }o--|| ProductCategory : "belongs to"
+    Product ||--o{ Inventory : "stored as"
+    Product ||--o{ PurchaseOrderItem : "ordered as"
+    ProductCategory }o--o| ProductCategory : "parent"
+    ProductCategory ||--o{ Product : "contains"
+    Inventory }o--|| Product : "of"
+    Inventory }o--|| Warehouse : "in"
+    Inventory }o--o| WarehouseLocation : "at"
+    Inventory ||--o{ StockMovement : "has movements"
+    StockMovement }o--|| Inventory : "affects"
+    StockMovement }o--|| Employee : "performed by"
+    Supplier ||--o{ PurchaseOrder : "supplies"
+    PurchaseOrder }o--|| Supplier : "from"
+    PurchaseOrder }o--|| Employee : "requested by"
+    PurchaseOrder }o--o| Employee : "approved by"
+    PurchaseOrder ||--o{ PurchaseOrderItem : "contains"
+    PurchaseOrderItem }o--|| PurchaseOrder : "belongs to"
+    PurchaseOrderItem }o--|| Product : "for"
+}
+
+' ===== WORKPLACE MOVEMENT PACKAGE =====
+package "Workplace Movement" as WorkplaceMovement {
+    class WorkPlace {
+        + WorkPlaceId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Location : string <<get>> <<set>>
+        + DepartmentId : int <<get>> <<set>>
+        + Capacity : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + EquipmentRequired : string? <<get>> <<set>>
+        + SafetyRequirements : string? <<get>> <<set>>
+        + GetDepartment() : Department
+        + GetCurrentAssignments() : List<WorkPlaceAssignment>
+        + GetAvailableCapacity() : int
+        + GetMovementRequests() : List<WorkPlaceMovementRequest>
+    }
+    
+    class WorkPlaceAssignment {
+        + AssignmentId : int <<get>> <<set>>
+        + EmployeeId : int <<get>> <<set>>
+        + WorkPlaceId : int <<get>> <<set>>
+        + StartDate : DateTime <<get>> <<set>>
+        + EndDate : DateTime? <<get>> <<set>>
+        + AssignmentType : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + AssignedBy : int <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + GetEmployee() : Employee
+        + GetWorkPlace() : WorkPlace
+        + GetAssignedByEmployee() : Employee
+    }
+    
+    class WorkPlaceMovementRequest {
+        + RequestId : int <<get>> <<set>>
+        + EmployeeId : int <<get>> <<set>>
+        + CurrentWorkPlaceId : int? <<get>> <<set>>
+        + RequestedWorkPlaceId : int <<get>> <<set>>
+        + RequestDate : DateTime <<get>> <<set>>
+        + RequestedDate : DateTime <<get>> <<set>>
+        + Reason : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + ApprovedBy : int? <<get>> <<set>>
+        + ApprovalDate : DateTime? <<get>> <<set>>
+        + ProcessedDate : DateTime? <<get>> <<set>>
+        + Priority : int <<get>> <<set>>
+        + GetEmployee() : Employee
+        + GetCurrentWorkPlace() : WorkPlace?
+        + GetRequestedWorkPlace() : WorkPlace
+        + GetApprovedByEmployee() : Employee?
+    }
+    
+    class WorkPlaceEquipment {
+        + EquipmentId : int <<get>> <<set>>
+        + WorkPlaceId : int <<get>> <<set>>
+        + EquipmentName : string <<get>> <<set>>
+        + EquipmentType : string <<get>> <<set>>
+        + SerialNumber : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + MaintenanceDate : DateTime? <<get>> <<set>>
+        + GetWorkPlace() : WorkPlace
+    }
+    
+    class WorkShift {
+        + ShiftId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + StartTime : TimeSpan <<get>> <<set>>
+        + EndTime : TimeSpan <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetWorkPlaceSchedules() : List<WorkPlaceSchedule>
+    }
+    
+    class WorkPlaceSchedule {
+        + ScheduleId : int <<get>> <<set>>
+        + WorkPlaceId : int <<get>> <<set>>
+        + ShiftId : int <<get>> <<set>>
+        + Date : DateTime <<get>> <<set>>
+        + AssignedEmployeeId : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetWorkPlace() : WorkPlace
+        + GetShift() : WorkShift
+        + GetAssignedEmployee() : Employee?
+    }
+    
+    BaseAuditableEntity <|-- WorkPlace
+    BaseAuditableEntity <|-- WorkPlaceAssignment
+    BaseAuditableEntity <|-- WorkPlaceMovementRequest
+    BaseAuditableEntity <|-- WorkPlaceEquipment
+    BaseAuditableEntity <|-- WorkShift
+    BaseAuditableEntity <|-- WorkPlaceSchedule
+    
+    WorkPlace }o--|| Department : "belongs to"
+    WorkPlace ||--o{ WorkPlaceAssignment : "has assignments"
+    WorkPlace ||--o{ WorkPlaceMovementRequest : "requested"
+    WorkPlace ||--o{ WorkPlaceEquipment : "has equipment"
+    WorkPlace ||--o{ WorkPlaceSchedule : "has schedules"
+    WorkPlaceAssignment }o--|| Employee : "assigned to"
+    WorkPlaceAssignment }o--|| WorkPlace : "at"
+    WorkPlaceAssignment }o--|| Employee : "assigned by"
+    WorkPlaceMovementRequest }o--|| Employee : "requested by"
+    WorkPlaceMovementRequest }o--o| WorkPlace : "from"
+    WorkPlaceMovementRequest }o--|| WorkPlace : "to"
+    WorkPlaceMovementRequest }o--o| Employee : "approved by"
+    WorkPlaceEquipment }o--|| WorkPlace : "belongs to"
+    WorkShift ||--o{ WorkPlaceSchedule : "scheduled"
+    WorkPlaceSchedule }o--|| WorkPlace : "for"
+    WorkPlaceSchedule }o--|| WorkShift : "during"
+    WorkPlaceSchedule }o--o| Employee : "assigned to"
+}
+
+' ===== VISITOR MANAGEMENT PACKAGE =====
+package "Visitor Management" as VisitorManagement {
+    class Visitor {
+        + VisitorId : int <<get>> <<set>>
+        + FirstName : string <<get>> <<set>>
+        + LastName : string <<get>> <<set>>
+        + Email : string <<get>> <<set>>
+        + Phone : string <<get>> <<set>>
+        + DocumentType : string <<get>> <<set>>
+        + DocumentNumber : string <<get>> <<set>>
+        + Company : string? <<get>> <<set>>
+        + Position : string? <<get>> <<set>>
+        + Photo : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + IsBlacklisted : bool <<get>> <<set>>
+        + BlacklistReason : string? <<get>> <<set>>
+        + GetFullName() : string
+        + GetVisitHistory() : List<VisitorAccess>
+        + GetActiveVisits() : List<VisitorAccess>
+        + GetPreRegistrations() : List<VisitorPreRegistration>
+    }
+    
+    class VisitorPreRegistration {
+        + PreRegistrationId : int <<get>> <<set>>
+        + VisitorId : int <<get>> <<set>>
+        + RequestedById : int <<get>> <<set>>
+        + HostEmployeeId : int <<get>> <<set>>
+        + VisitPurpose : string <<get>> <<set>>
+        + VisitDate : DateTime <<get>> <<set>>
+        + ExpectedArrivalTime : TimeSpan <<get>> <<set>>
+        + ExpectedDepartureTime : TimeSpan <<get>> <<set>>
+        + AccessAreaIds : string <<get>> <<set>>
+        + SpecialRequirements : string? <<get>> <<set>>
+        + Notes : string? <<get>> <<set>>
+        + QRCode : string <<get>> <<set>>
+        + AccessToken : string <<get>> <<set>>
+        + TokenExpiryDate : DateTime <<get>> <<set>>
+        + IsApproved : bool <<get>> <<set>>
+        + ApprovedById : int? <<get>> <<set>>
+        + ApprovalDate : DateTime? <<get>> <<set>>
+        + GenerateQRCode() : string
+        + GenerateAccessToken() : string
+        + ValidateToken() : bool
+    }
+    
+    class VisitorAccess {
+        + AccessId : int <<get>> <<set>>
+        + VisitorId : int <<get>> <<set>>
+        + PreRegistrationId : int? <<get>> <<set>>
+        + HostEmployeeId : int <<get>> <<set>>
+        + CheckInTime : DateTime <<get>> <<set>>
+        + CheckOutTime : DateTime? <<get>> <<set>>
+        + ActualPurpose : string <<get>> <<set>>
+        + BadgeNumber : string? <<get>> <<set>>
+        + EscortRequired : bool <<get>> <<set>>
+        + EscortEmployeeId : int? <<get>> <<set>>
+        + CheckInLocationId : int <<get>> <<set>>
+        + CheckOutLocationId : int? <<get>> <<set>>
+        + VehiclePlate : string? <<get>> <<set>>
+        + VehicleModel : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetDuration() : TimeSpan?
+        + IsOverdue() : bool
+        + PerformCheckOut() : void
+    }
+    
+    class VisitorAccessLog {
+        + LogId : int <<get>> <<set>>
+        + VisitorAccessId : int <<get>> <<set>>
+        + AccessAreaId : int <<get>> <<set>>
+        + AccessTime : DateTime <<get>> <<set>>
+        + AccessType : string <<get>> <<set>>
+        + DeviceId : string? <<get>> <<set>>
+        + IpAddress : string? <<get>> <<set>>
+        + Success : bool <<get>> <<set>>
+        + FailureReason : string? <<get>> <<set>>
+    }
+    
+    class AccessArea {
+        + AreaId : int <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + AreaType : string <<get>> <<set>>
+        + Building : string <<get>> <<set>>
+        + Floor : string? <<get>> <<set>>
+        + SecurityLevel : int <<get>> <<set>>
+        + RequiresEscort : bool <<get>> <<set>>
+        + MaxCapacity : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetAvailableCapacity() : int
+    }
+    
+    class VisitorAccessRule {
+        + RuleId : int <<get>> <<set>>
+        + AccessAreaId : int <<get>> <<set>>
+        + RuleName : string <<get>> <<set>>
+        + RuleType : string <<get>> <<set>>
+        + RuleValue : string <<get>> <<set>>
+        + AllowedStartTime : TimeSpan? <<get>> <<set>>
+        + AllowedEndTime : TimeSpan? <<get>> <<set>>
+        + AllowedDaysOfWeek : string? <<get>> <<set>>
+        + RequiredApprovalLevel : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + ValidateAccess(visitor:Visitor, accessTime:DateTime) : bool
+    }
+    
+    class VisitorNotification {
+        + NotificationId : int <<get>> <<set>>
+        + VisitorId : int <<get>> <<set>>
+        + PreRegistrationId : int? <<get>> <<set>>
+        + VisitorAccessId : int? <<get>> <<set>>
+        + NotificationType : string <<get>> <<set>>
+        + Recipient : string <<get>> <<set>>
+        + Subject : string <<get>> <<set>>
+        + Message : string <<get>> <<set>>
+        + SentDate : DateTime <<get>> <<set>>
+        + DeliveryStatus : string <<get>> <<set>>
+    }
+    
+    class VisitorBadge {
+        + BadgeId : int <<get>> <<set>>
+        + BadgeNumber : string <<get>> <<set>>
+        + BadgeType : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + IsAvailable : bool <<get>> <<set>>
+        + AssignedVisitorAccessId : int? <<get>> <<set>>
+        + LastUsedDate : DateTime? <<get>> <<set>>
+        + AssignToBadge(visitorAccessId:int) : void
+        + ReturnBadge() : void
+    }
+    
+    enum VisitorStatus {
+        Active = 0,
+        Inactive = 1,
+        Blacklisted = 2,
+        PendingApproval = 3
+    }
+    
+    enum AccessType {
+        Entry = 0,
+        Exit = 1,
+        AreaAccess = 2,
+        Emergency = 3
+    }
+    
+    enum NotificationType {
+        PreRegistration = 0,
+        Approval = 1,
+        CheckIn = 2,
+        CheckOut = 3,
+        Overdue = 4,
+        Emergency = 5
+    }
+    
+    BaseAuditableEntity <|-- Visitor
+    BaseAuditableEntity <|-- VisitorPreRegistration
+    BaseAuditableEntity <|-- VisitorAccess
+    BaseAuditableEntity <|-- VisitorAccessLog
+    BaseAuditableEntity <|-- AccessArea
+    BaseAuditableEntity <|-- VisitorAccessRule
+    BaseAuditableEntity <|-- VisitorNotification
+    BaseAuditableEntity <|-- VisitorBadge
+    
+    Visitor ||--o{ VisitorPreRegistration : "has pre-registrations"
+    Visitor ||--o{ VisitorAccess : "has visits"
+    Visitor ||--o{ VisitorNotification : "receives"
+    
+    VisitorPreRegistration }o--|| Visitor : "for"
+    VisitorPreRegistration }o--|| Employee : "requested by"
+    VisitorPreRegistration }o--|| Employee : "hosted by"
+    VisitorPreRegistration }o--o| Employee : "approved by"
+    VisitorPreRegistration ||--o| VisitorAccess : "becomes"
+    
+    VisitorAccess }o--|| Visitor : "by"
+    VisitorAccess }o--o| VisitorPreRegistration : "from"
+    VisitorAccess }o--|| Employee : "hosted by"
+    VisitorAccess }o--o| Employee : "escorted by"
+    VisitorAccess }o--|| AccessArea : "checked in at"
+    VisitorAccess }o--o| AccessArea : "checked out at"
+    VisitorAccess ||--o{ VisitorAccessLog : "generates"
+    VisitorAccess ||--o| VisitorBadge : "uses"
+    
+    VisitorAccessLog }o--|| VisitorAccess : "for"
+    VisitorAccessLog }o--|| AccessArea : "in"
+    
+    AccessArea ||--o{ VisitorAccessRule : "has rules"
+    AccessArea ||--o{ VisitorAccess : "hosts"
+    AccessArea ||--o{ VisitorAccessLog : "logs"
+    
+    VisitorAccessRule }o--|| AccessArea : "applies to"
+    
+    VisitorNotification }o--|| Visitor : "sent to"
+    VisitorNotification }o--o| VisitorPreRegistration : "about"
+    VisitorNotification }o--o| VisitorAccess : "about"
+    
+    VisitorBadge ||--o| VisitorAccess : "assigned to"
+}
+
+' ===== PARTNER COMPANY MANAGEMENT PACKAGE =====
+package "Partner Company Management" as PartnerCompanyManagement {
+    class PartnerCompany {
+        + CompanyId : int <<get>> <<set>>
+        + CompanyName : string <<get>> <<set>>
+        + TaxId : string <<get>> <<set>>
+        + ContactName : string <<get>> <<set>>
+        + ContactEmail : string <<get>> <<set>>
+        + ContactPhone : string <<get>> <<set>>
+        + Address : string <<get>> <<set>>
+        + CompanyType : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + ComplianceStatus : string <<get>> <<set>>
+        + GetContracts() : List<PartnerContract>
+        + GetEmployees() : List<PartnerEmployee>
+        + IsCompliant() : bool
+    }
+    
+    class PartnerEmployee {
+        + EmployeeId : int <<get>> <<set>>
+        + CompanyId : int <<get>> <<set>>
+        + FirstName : string <<get>> <<set>>
+        + LastName : string <<get>> <<set>>
+        + Email : string <<get>> <<set>>
+        + Position : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + TrainingStatus : string <<get>> <<set>>
+        + ComplianceStatus : string <<get>> <<set>>
+        + GetCompany() : PartnerCompany
+        + IsTrainingValid() : bool
+    }
+    
+    class PartnerContract {
+        + ContractId : int <<get>> <<set>>
+        + CompanyId : int <<get>> <<set>>
+        + ContractNumber : string <<get>> <<set>>
+        + StartDate : DateTime <<get>> <<set>>
+        + EndDate : DateTime <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + SlaRequirements : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + ResponsibleUserId : int <<get>> <<set>>
+        + GetCompany() : PartnerCompany
+        + IsExpired() : bool
+    }
+    
+    BaseAuditableEntity <|-- PartnerCompany
+    BaseAuditableEntity <|-- PartnerEmployee
+    BaseAuditableEntity <|-- PartnerContract
+    
+    PartnerCompany ||--o{ PartnerEmployee : "employs"
+    PartnerCompany ||--o{ PartnerContract : "has contracts"
+    PartnerEmployee }o--|| PartnerCompany : "works for"
+    PartnerContract }o--|| PartnerCompany : "belongs to"
+    PartnerContract }o--|| Employee : "managed by"
+}
+
+' ===== RESOURCE RESERVATION PACKAGE =====
+package "Resource Reservation" as ResourceReservation {
+    class Resource {
+        + ResourceId : int <<get>> <<set>>
+        + ResourceName : string <<get>> <<set>>
+        + ResourceType : string <<get>> <<set>>
+        + Location : string <<get>> <<set>>
+        + Capacity : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + RequiresApproval : bool <<get>> <<set>>
+        + HasIoTSensors : bool <<get>> <<set>>
+        + GetReservations() : List<ResourceReservation>
+        + IsAvailable(startTime:DateTime, endTime:DateTime) : bool
+    }
+    
+    class ResourceReservation {
+        + ReservationId : int <<get>> <<set>>
+        + ResourceId : int <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + StartTime : DateTime <<get>> <<set>>
+        + EndTime : DateTime <<get>> <<set>>
+        + Purpose : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + CheckInTime : DateTime? <<get>> <<set>>
+        + CheckOutTime : DateTime? <<get>> <<set>>
+        + AutoReleased : bool <<get>> <<set>>
+        + GetResource() : Resource
+        + GetUser() : Employee
+        + PerformCheckIn() : void
+        + PerformCheckOut() : void
+    }
+    
+    class IoTSensor {
+        + SensorId : int <<get>> <<set>>
+        + ResourceId : int <<get>> <<set>>
+        + SensorType : string <<get>> <<set>>
+        + DeviceId : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetResource() : Resource
+        + DetectOccupancy() : bool
+    }
+    
+    BaseAuditableEntity <|-- Resource
+    BaseAuditableEntity <|-- ResourceReservation
+    BaseAuditableEntity <|-- IoTSensor
+    
+    Resource ||--o{ ResourceReservation : "reserved"
+    Resource ||--o{ IoTSensor : "has sensors"
+    ResourceReservation }o--|| Resource : "reserves"
+    ResourceReservation }o--|| Employee : "reserved by"
+    IoTSensor }o--|| Resource : "monitors"
+}
+
+' ===== COMPLIANCE POLICY ENGINE PACKAGE =====
+package "Compliance & Policy Engine" as CompliancePolicyEngine {
+    class ComplianceRule {
+        + RuleId : int <<get>> <<set>>
+        + RuleName : string <<get>> <<set>>
+        + RuleType : string <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + Priority : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + RuleCondition : string <<get>> <<set>>
+        + RuleAction : string <<get>> <<set>>
+        + ViolationSeverity : string <<get>> <<set>>
+        + ValidateRule(context:RuleContext) : bool
+    }
+    
+    class PolicyViolation {
+        + ViolationId : int <<get>> <<set>>
+        + RuleId : int <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + ViolationDate : DateTime <<get>> <<set>>
+        + Severity : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + GetRule() : ComplianceRule
+        + GetUser() : Employee
+    }
+    
+    class ExceptionRequest {
+        + RequestId : int <<get>> <<set>>
+        + RuleId : int <<get>> <<set>>
+        + RequesterId : int <<get>> <<set>>
+        + Justification : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + GetRule() : ComplianceRule
+        + GetRequester() : Employee
+    }
+    
+    BaseAuditableEntity <|-- ComplianceRule
+    BaseAuditableEntity <|-- PolicyViolation
+    BaseAuditableEntity <|-- ExceptionRequest
+    
+    ComplianceRule ||--o{ PolicyViolation : "violated"
+    ComplianceRule ||--o{ ExceptionRequest : "exceptions"
+    PolicyViolation }o--|| ComplianceRule : "violates"
+    PolicyViolation }o--|| Employee : "by user"
+    ExceptionRequest }o--|| ComplianceRule : "exception for"
+    ExceptionRequest }o--|| Employee : "requested by"
+}
+
+' ===== KPI ANALYTICS PACKAGE =====
+package "KPI & Analytics" as KPIAnalytics {
+    class KPIMetric {
+        + MetricId : int <<get>> <<set>>
+        + MetricName : string <<get>> <<set>>
+        + MetricType : string <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + Unit : string <<get>> <<set>>
+        + TargetValue : decimal? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetCurrentValue() : decimal
+    }
+    
+    class Dashboard {
+        + DashboardId : int <<get>> <<set>>
+        + DashboardName : string <<get>> <<set>>
+        + DashboardType : string <<get>> <<set>>
+        + OwnerId : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetOwner() : Employee
+        + GetWidgets() : List<DashboardWidget>
+    }
+    
+    class DashboardWidget {
+        + WidgetId : int <<get>> <<set>>
+        + DashboardId : int <<get>> <<set>>
+        + WidgetName : string <<get>> <<set>>
+        + WidgetType : string <<get>> <<set>>
+        + MetricId : int? <<get>> <<set>>
+        + GetDashboard() : Dashboard
+        + GetMetric() : KPIMetric?
+    }
+    
+    BaseAuditableEntity <|-- KPIMetric
+    BaseAuditableEntity <|-- Dashboard
+    BaseAuditableEntity <|-- DashboardWidget
+    
+    Dashboard }o--|| Employee : "owned by"
+    Dashboard ||--o{ DashboardWidget : "widgets"
+    DashboardWidget }o--|| Dashboard : "belongs to"
+    DashboardWidget }o--o| KPIMetric : "displays"
+}
+
+' ===== INCIDENT MANAGEMENT PACKAGE =====
+package "Incident Management" as IncidentManagement {
+    class Incident {
+        + IncidentId : int <<get>> <<set>>
+        + IncidentNumber : string <<get>> <<set>>
+        + Title : string <<get>> <<set>>
+        + Description : string <<get>> <<set>>
+        + Severity : string <<get>> <<set>>
+        + Status : string <<get>> <<set>>
+        + ReportedDate : DateTime <<get>> <<set>>
+        + ReportedById : int <<get>> <<set>>
+        + AssignedToId : int? <<get>> <<set>>
+        + ResolvedDate : DateTime? <<get>> <<set>>
+        + GetReportedBy() : Employee
+        + GetAssignedTo() : Employee?
+    }
+    
+    class IncidentType {
+        + TypeId : int <<get>> <<set>>
+        + TypeName : string <<get>> <<set>>
+        + Category : string <<get>> <<set>>
+        + DefaultSeverity : string <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        + GetIncidents() : List<Incident>
+    }
+    
+    class IncidentResolution {
+        + ResolutionId : int <<get>> <<set>>
+        + IncidentId : int <<get>> <<set>>
+        + ResolvedById : int <<get>> <<set>>
+        + ResolutionDate : DateTime <<get>> <<set>>
+        + Resolution : string <<get>> <<set>>
+        + GetIncident() : Incident
+        + GetResolvedBy() : Employee
+    }
+    
+    BaseAuditableEntity <|-- Incident
+    BaseAuditableEntity <|-- IncidentType
+    BaseAuditableEntity <|-- IncidentResolution
+    
+    Incident }o--|| IncidentType : "of type"
+    Incident }o--|| Employee : "reported by"
+    Incident }o--o| Employee : "assigned to"
+    Incident ||--o{ IncidentResolution : "resolutions"
+    IncidentResolution }o--|| Incident : "resolves"
+    IncidentResolution }o--|| Employee : "resolved by"
+}
+
+' ===== VEHICLE TRACKING & IOT PACKAGE =====
+package "Vehicle Tracking & IoT" as VehicleTrackingIoT {
+    
+    class Vehicle {
+        + Id : int <<get>> <<set>>
+        + LicensePlate : string <<get>> <<set>>
+        + VehicleType : VehicleType <<get>> <<set>>
+        + Brand : string <<get>> <<set>>
+        + Model : string <<get>> <<set>>
+        + Status : VehicleStatus <<get>> <<set>>
+        + CurrentDriverId : int? <<get>> <<set>>
+        + CompanyId : int <<get>> <<set>>
+        + CurrentKm : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        --
+        + AssignDriver(driverId:int) : void
+        + UpdateKm(newKm:int) : void
+        + GetCurrentDriver() : Employee?
+    }
+    
+    class IoTDevice {
+        + Id : int <<get>> <<set>>
+        + DeviceId : string <<get>> <<set>>
+        + DeviceType : IoTDeviceType <<get>> <<set>>
+        + Status : IoTDeviceStatus <<get>> <<set>>
+        + VehicleId : int? <<get>> <<set>>
+        + BatteryLevel : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        --
+        + SendCommand(command:string) : Task<bool>
+        + GetTelemetryData() : Task<IoTTelemetryData>
+    }
+    
+    class VehicleTracking {
+        + Id : int <<get>> <<set>>
+        + VehicleId : int <<get>> <<set>>
+        + Latitude : decimal <<get>> <<set>>
+        + Longitude : decimal <<get>> <<set>>
+        + Speed : decimal <<get>> <<set>>
+        + Timestamp : DateTimeOffset <<get>> <<set>>
+        + IsInsideGeofence : bool <<get>> <<set>>
+        --
+        + CalculateDistance(otherPoint:VehicleTracking) : decimal
+        + GetFormattedAddress() : string
+    }
+    
+    class VehicleTrip {
+        + Id : int <<get>> <<set>>
+        + VehicleId : int <<get>> <<set>>
+        + DriverId : int <<get>> <<set>>
+        + TripType : TripType <<get>> <<set>>
+        + Status : TripStatus <<get>> <<set>>
+        + ApprovalStatus : ApprovalStatus <<get>> <<set>>
+        + RequestedBy : int <<get>> <<set>>
+        --
+        + StartTrip() : void
+        + EndTrip() : void
+        + Approve(approverId:int) : void
+    }
+    
+    class IoTAlarm {
+        + Id : int <<get>> <<set>>
+        + IoTDeviceId : int <<get>> <<set>>
+        + AlarmType : AlarmType <<get>> <<set>>
+        + Severity : AlarmSeverity <<get>> <<set>>
+        + Status : AlarmStatus <<get>> <<set>>
+        + TriggerTime : DateTimeOffset <<get>> <<set>>
+        --
+        + Acknowledge(employeeId:int) : void
+        + Resolve(employeeId:int, notes:string) : void
+    }
+    
+    enum VehicleType {
+        CAR
+        TRUCK
+        VAN
+        MOTORCYCLE
+        EQUIPMENT
+    }
+    
+    enum VehicleStatus {
+        AVAILABLE
+        IN_USE
+        MAINTENANCE
+        BROKEN
+    }
+    
+    enum IoTDeviceType {
+        GPS_TRACKER
+        TEMPERATURE_SENSOR
+        FUEL_SENSOR
+        CAMERA
+        OTHER
+    }
+    
+    enum TripType {
+        BUSINESS
+        PERSONAL
+        MAINTENANCE
+        EMERGENCY
+    }
+    
+    enum TripStatus {
+        PLANNED
+        IN_PROGRESS
+        COMPLETED
+        CANCELLED
+    }
+    
+    enum AlarmType {
+        TEMPERATURE_HIGH
+        FUEL_LOW
+        SPEED_LIMIT_EXCEEDED
+        GEOFENCE_VIOLATION
+        EMERGENCY_BUTTON
+    }
+    
+    enum AlarmSeverity {
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+    }
+    
+    BaseAuditableEntity <|-- Vehicle
+    BaseAuditableEntity <|-- IoTDevice
+    BaseAuditableEntity <|-- VehicleTracking
+    BaseAuditableEntity <|-- VehicleTrip
+    BaseAuditableEntity <|-- IoTAlarm
+    
+    Vehicle ||--o{ VehicleTracking : "tracks"
+    Vehicle ||--o{ VehicleTrip : "travels"
+    Vehicle ||--o{ IoTDevice : "monitors"
+    IoTDevice ||--o{ IoTAlarm : "triggers"
+    VehicleTrip }o--|| Vehicle : "uses"
+}
+
+' ===== CLIENT MANAGEMENT PACKAGE =====
+package "Client Management" as ClientManagement {
+    
+    class Client {
+        + Id : int <<get>> <<set>>
+        + CompanyName : string <<get>> <<set>>
+        + TaxId : string <<get>> <<set>>
+        + ClientType : ClientType <<get>> <<set>>
+        + Status : ClientStatus <<get>> <<set>>
+        + CreditLimit : decimal? <<get>> <<set>>
+        + AccountManagerId : int? <<get>> <<set>>
+        + AssignedTenantId : int? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        --
+        + CalculateAvailableCredit() : decimal
+        + AssignAccountManager(managerId:int) : void
+        + GetActiveContracts() : List<ClientContract>
+    }
+    
+    class ClientContract {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + ContractNumber : string <<get>> <<set>>
+        + ContractType : ContractType <<get>> <<set>>
+        + StartDate : DateTimeOffset <<get>> <<set>>
+        + EndDate : DateTimeOffset <<get>> <<set>>
+        + Value : decimal <<get>> <<set>>
+        + Status : ContractStatus <<get>> <<set>>
+        --
+        + Sign(signedBy:string) : void
+        + Renew(endDate:DateTimeOffset) : ClientContract
+        + GenerateInvoice() : ClientInvoice
+    }
+    
+    class ClientInvoice {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + InvoiceNumber : string <<get>> <<set>>
+        + InvoiceDate : DateTimeOffset <<get>> <<set>>
+        + TotalAmount : decimal <<get>> <<set>>
+        + Status : InvoiceStatus <<get>> <<set>>
+        + PaymentStatus : PaymentStatus <<get>> <<set>>
+        --
+        + MarkAsPaid() : void
+        + GeneratePDF() : Task<byte[]>
+    }
+    
+    class ClientService {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + ServiceType : ServiceType <<get>> <<set>>
+        + ServiceName : string <<get>> <<set>>
+        + UnitPrice : decimal <<get>> <<set>>
+        + Status : ServiceStatus <<get>> <<set>>
+        + ResponsibleEmployeeId : int? <<get>> <<set>>
+        --
+        + CalculateTotal() : decimal
+        + UpdatePrice(newPrice:decimal) : void
+    }
+    
+    class ClientFeedback {
+        + Id : int <<get>> <<set>>
+        + ClientId : int <<get>> <<set>>
+        + FeedbackType : FeedbackType <<get>> <<set>>
+        + Rating : int <<get>> <<set>>
+        + Subject : string <<get>> <<set>>
+        + Status : FeedbackStatus <<get>> <<set>>
+        + AssignedTo : int? <<get>> <<set>>
+        --
+        + Assign(employeeId:int) : void
+        + Resolve(notes:string) : void
+    }
+    
+    enum ClientType {
+        PROSPECT
+        CUSTOMER
+        PARTNER
+        VENDOR
+    }
+    
+    enum ClientStatus {
+        ACTIVE
+        INACTIVE
+        SUSPENDED
+        PROSPECT
+    }
+    
+    enum ContractType {
+        SERVICE
+        PRODUCT
+        MAINTENANCE
+        SUPPORT
+    }
+    
+    enum ContractStatus {
+        DRAFT
+        ACTIVE
+        EXPIRED
+        TERMINATED
+    }
+    
+    enum ServiceType {
+        CONSULTING
+        SUPPORT
+        MAINTENANCE
+        TRAINING
+    }
+    
+    enum FeedbackType {
+        COMPLAINT
+        SUGGESTION
+        COMPLIMENT
+        SUPPORT_REQUEST
+    }
+    
+    BaseAuditableEntity <|-- Client
+    BaseAuditableEntity <|-- ClientContract
+    BaseAuditableEntity <|-- ClientInvoice
+    BaseAuditableEntity <|-- ClientService
+    BaseAuditableEntity <|-- ClientFeedback
+    
+    Client ||--o{ ClientContract : "has"
+    Client ||--o{ ClientInvoice : "receives"
+    Client ||--o{ ClientService : "subscribes"
+    Client ||--o{ ClientFeedback : "provides"
+    ClientContract ||--o{ ClientInvoice : "generates"
+    ClientService ||--o{ ClientFeedback : "evaluates"
+}
+
+' ===== MULTI-TENANT ARCHITECTURE PACKAGE =====
+package "Multi-Tenant Architecture" as MultiTenantArchitecture {
+    
+    class Tenant {
+        + Id : int <<get>> <<set>>
+        + TenantCode : string <<get>> <<set>>
+        + Name : string <<get>> <<set>>
+        + Domain : string? <<get>> <<set>>
+        + TenantType : TenantType <<get>> <<set>>
+        + Plan : TenantPlan <<get>> <<set>>
+        + Status : TenantStatus <<get>> <<set>>
+        + MaxUsers : int <<get>> <<set>>
+        + MaxStorage : long <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>>
+        --
+        + Activate() : void
+        + Suspend(reason:string) : void
+        + UpgradePlan(newPlan:TenantPlan) : void
+        + GetUsageStatistics() : TenantUsageStats
+    }
+    
+    class TenantUser {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + UserId : int <<get>> <<set>>
+        + TenantRole : TenantRole <<get>> <<set>>
+        + IsOwner : bool <<get>> <<set>>
+        + IsAdmin : bool <<get>> <<set>>
+        + Status : TenantUserStatus <<get>> <<set>>
+        --
+        + InviteUser(email:string) : void
+        + AcceptInvitation(token:string) : bool
+        + UpdateRole(newRole:TenantRole) : void
+    }
+    
+    class TenantFeature {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + FeatureId : int <<get>> <<set>>
+        + IsEnabled : bool <<get>> <<set>>
+        + LimitValue : int? <<get>> <<set>>
+        + UsedValue : int <<get>> <<set>>
+        --
+        + Enable() : void
+        + Disable() : void
+        + IsLimitExceeded() : bool
+    }
+    
+    class TenantBilling {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + BillingPeriod : string <<get>> <<set>>
+        + TotalAmount : decimal <<get>> <<set>>
+        + Status : BillingStatus <<get>> <<set>>
+        + PaymentDate : DateTimeOffset? <<get>> <<set>>
+        --
+        + MarkAsPaid() : void
+        + GenerateInvoice() : Task<string>
+    }
+    
+    class TenantAuditLog {
+        + Id : int <<get>> <<set>>
+        + TenantId : int <<get>> <<set>>
+        + UserId : int? <<get>> <<set>>
+        + Action : string <<get>> <<set>>
+        + EntityType : string <<get>> <<set>>
+        + Timestamp : DateTimeOffset <<get>> <<set>>
+        + AuditLevel : AuditLevel <<get>> <<set>>
+        --
+        + GetFormattedLog() : string
+        + IsSecurityRelevant() : bool
+    }
+    
+    enum TenantType {
+        TRIAL
+        BASIC
+        PROFESSIONAL
+        ENTERPRISE
+    }
+    
+    enum TenantPlan {
+        FREE
+        STARTER
+        PROFESSIONAL
+        ENTERPRISE
+    }
+    
+    enum TenantStatus {
+        ACTIVE
+        SUSPENDED
+        EXPIRED
+        TRIAL_EXPIRED
+    }
+    
+    enum TenantRole {
+        OWNER
+        ADMIN
+        MANAGER
+        USER
+    }
+    
+    enum BillingStatus {
+        PENDING
+        PAID
+        OVERDUE
+        CANCELLED
+    }
+    
+    BaseAuditableEntity <|-- Tenant
+    BaseAuditableEntity <|-- TenantUser
+    BaseAuditableEntity <|-- TenantFeature
+    BaseAuditableEntity <|-- TenantBilling
+    BaseAuditableEntity <|-- TenantAuditLog
+    
+    Tenant ||--o{ TenantUser : "contains"
+    Tenant ||--o{ TenantFeature : "has"
+    Tenant ||--o{ TenantBilling : "bills"
+    Tenant ||--o{ TenantAuditLog : "audits"
+}
+
+' ===== INTER-MODULE RELATIONSHIPS =====
+
+' Vehicle Tracking & IoT <-> Other Modules
+Employee ||--o{ VehicleTrip : "drives vehicles"
+Employee ||--o{ Vehicle : "assigned driver"
+Vehicle ||--o{ Incident : "vehicle incidents"
+IoTAlarm ||--o{ Incident : "IoT alarms"
+ApprovalRequest ||--o{ VehicleTrip : "approves trips"
+
+' Client Management <-> Other Modules
+Employee ||--o{ Client : "manages clients"
+Client ||--o{ Tenant : "assigned tenant"
+ClientFeedback ||--o{ Incident : "feedback incidents"
+ClientContract ||--o{ ApprovalRequest : "contract approvals"
+
+' Multi-Tenant Architecture <-> Other Modules
+Tenant ||--o{ Employee : "tenant employees"
+Tenant ||--o{ Client : "tenant clients"
+Tenant ||--o{ ComplianceRule : "tenant compliance"
+Tenant ||--o{ KPIMetric : "tenant KPIs"
+TenantUser ||--o{ TenantAuditLog : "user actions"
+
+' Incident Management <-> Other Modules
+Employee ||--o{ Incident : "reports incidents"
+Resource ||--o{ Incident : "resource incidents"
+PolicyViolation ||--o{ Incident : "generates incidents"
+@enduml

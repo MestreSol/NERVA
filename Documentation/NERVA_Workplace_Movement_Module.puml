@@ -1,0 +1,157 @@
+@startuml NERVA_Workplace_Movement_Module
+!define NERVA_WORKPLACE_MOVEMENT
+
+title NERVA - Módulo de Movimentação em Postos de Trabalho
+
+' ===== WORKPLACE ENTITIES =====
+class WorkPlace {
+    + Code : string <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Location : string <<get>> <<set>>
+    + Floor : string? <<get>> <<set>>
+    + Building : string? <<get>> <<set>>
+    + MaxCapacity : int <<get>> <<set>>
+    + CurrentCapacity : int <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+WorkPlace --> "Type" WorkPlaceType
+
+enum WorkPlaceType {
+    Office = 0,
+    Desk = 1,
+    MeetingRoom = 2,
+    Laboratory = 3,
+    Factory = 4,
+    Warehouse = 5,
+    RemoteWork = 6,
+    FieldWork = 7
+}
+
+' ===== ASSIGNMENT ENTITIES =====
+class WorkPlaceAssignment {
+    + EmployeeId : int <<get>> <<set>>
+    + WorkPlaceId : int <<get>> <<set>>
+    + StartDate : DateTime <<get>> <<set>>
+    + EndDate : DateTime? <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+    + IsPrimary : bool <<get>> <<set>> = true
+}
+WorkPlaceAssignment --> "AssignmentType" AssignmentType
+
+enum AssignmentType {
+    Permanent = 0,
+    Temporary = 1,
+    Project = 2,
+    Training = 3,
+    Rotation = 4,
+    Backup = 5
+}
+
+' ===== MOVEMENT ENTITIES =====
+class WorkPlaceMovementRequest {
+    + EmployeeId : int <<get>> <<set>>
+    + CurrentWorkPlaceId : int? <<get>> <<set>>
+    + RequestedWorkPlaceId : int <<get>> <<set>>
+    + RequestedById : int <<get>> <<set>>
+    + RequestReason : string <<get>> <<set>>
+    + StartDate : DateTime <<get>> <<set>>
+    + EndDate : DateTime? <<get>> <<set>>
+}
+WorkPlaceMovementRequest --> "Status" WorkPlaceMovementStatus
+WorkPlaceMovementRequest --> "MovementType" WorkPlaceMovementType
+
+enum WorkPlaceMovementStatus {
+    Draft = 0,
+    Submitted = 1,
+    UnderReview = 2,
+    Approved = 3,
+    Rejected = 4,
+    Completed = 7
+}
+
+enum WorkPlaceMovementType {
+    Transfer = 0,
+    Promotion = 1,
+    Rotation = 2,
+    TemporaryAssignment = 3,
+    NewHire = 6,
+    Termination = 7
+}
+
+class WorkPlaceMovementHistory {
+    + EmployeeId : int <<get>> <<set>>
+    + FromWorkPlaceId : int? <<get>> <<set>>
+    + ToWorkPlaceId : int? <<get>> <<set>>
+    + MovementReason : string <<get>> <<set>>
+    + EffectiveDate : DateTime <<get>> <<set>>
+}
+
+' ===== SCHEDULE AND RESERVATION =====
+class WorkPlaceSchedule {
+    + WorkPlaceId : int <<get>> <<set>>
+    + EmployeeId : int <<get>> <<set>>
+    + DayOfWeek : int <<get>> <<set>>
+    + StartTime : TimeSpan <<get>> <<set>>
+    + EndTime : TimeSpan <<get>> <<set>>
+    + IsActive : bool <<get>> <<set>> = true
+}
+WorkPlaceSchedule --> "ScheduleType" ScheduleType
+
+enum ScheduleType {
+    Regular = 0,
+    Flexible = 1,
+    Shift = 2,
+    Remote = 4,
+    Hybrid = 5
+}
+
+class WorkPlaceReservation {
+    + WorkPlaceId : int <<get>> <<set>>
+    + EmployeeId : int <<get>> <<set>>
+    + ReservationDate : DateTime <<get>> <<set>>
+    + StartTime : TimeSpan <<get>> <<set>>
+    + EndTime : TimeSpan <<get>> <<set>>
+    + Purpose : string <<get>> <<set>>
+}
+WorkPlaceReservation --> "Status" ReservationStatus
+
+enum ReservationStatus {
+    Pending = 0,
+    Confirmed = 1,
+    CheckedIn = 2,
+    Completed = 3,
+    Cancelled = 4
+}
+
+' ===== RELATIONSHIPS =====
+WorkPlace --> "Department" Department
+WorkPlace --> "Supervisor" Employee
+Employee ||--o{ WorkPlaceAssignment : "assigned to"
+WorkPlace ||--o{ WorkPlaceAssignment : "contains"
+Employee ||--o{ WorkPlaceMovementRequest : "requests"
+WorkPlace ||--o{ WorkPlaceMovementRequest : "target"
+Employee ||--o{ WorkPlaceMovementHistory : "moved"
+WorkPlace ||--o{ WorkPlaceSchedule : "scheduled"
+Employee ||--o{ WorkPlaceSchedule : "works"
+WorkPlace ||--o{ WorkPlaceReservation : "reserved"
+Employee ||--o{ WorkPlaceReservation : "reserves"
+WorkPlaceMovementRequest --> "ApprovalRequest" ApprovalRequest
+
+' ===== EXTERNAL REFERENCES =====
+class Employee {
+    + EmployeeNumber : string
+    + FirstName : string
+    + LastName : string
+}
+
+class Department {
+    + Name : string
+    + Description : string
+}
+
+class ApprovalRequest {
+    + RequestReason : string
+    + Status : string
+}
+
+@enduml
