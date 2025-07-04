@@ -1,0 +1,76 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+*.log
+
+# Visual Studio Code
+.vscode/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+*.nuspec
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Rider
+.idea/
+
+# C# specific
+*.dll
+*.exe
+*.pdb
+*.mdb
+*.cache
+*.dbmdl
+
+# Others
+*.tmp
+*.bak
+*.swp
+*.sln.ide
+
+# Test results
+TestResults/
+*.TestResults
+
+# Publish
+publish/
+out/
+
+# User-specific files
+*.vspscc
+*.vssscc
+*.userprefs
+*.csproj.user
+*.sln.docstates
+
+# DotCover
+*.dotCover
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# Local history for VS Code
+.history/
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# OS generated files
+.DS_Store
+*.DS_Store
+Icon?
+._*
