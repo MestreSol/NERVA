@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Entities.Places
 {
@@ -12,6 +13,5 @@ namespace Domain.Entities.Places
         public DateTime ReservedTo { get; set; }
         public DateTime ReservationDate { get; set; } = DateTime.UtcNow;
         public ReservationStatus Purpose { get; set; } = ReservationStatus.Pending;
-
     }
 }
