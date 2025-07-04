@@ -15,5 +15,7 @@ namespace Domain.Entities.Employee
         public EmployeeType Type { get; set; }
         public decimal Salary { get; set; }
         public bool IsActive { get; set; } = true;
+        public EmployeeStatus Status;
+        public Departament Departament { get; set; } = null!;
     }
 }
