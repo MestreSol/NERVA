@@ -3,7 +3,32 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36203.30 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{E295B1B9-4E70-4BC1-98D9-9CC40FC888FC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain.UnitTest", "Domain.UnitTest\Domain.UnitTest.csproj", "{AED626C5-A6B1-4CB4-984E-1811610313B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{6B6FD347-76B4-4866-8D4B-7B68347EB435}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		..\RTOT\uml\include.puml = ..\RTOT\uml\include.puml
+		..\RTOT\uml\RTOT_Approval_Workflow_Module.puml = ..\RTOT\uml\RTOT_Approval_Workflow_Module.puml
+		..\RTOT\uml\NERVA_Access_Control_Module.puml = ..\RTOT\uml\NERVA_Access_Control_Module.puml
+		..\RTOT\uml\RTOT_Client_Management.puml = ..\RTOT\uml\RTOT_Client_Management.puml
+		..\RTOT\uml\RTOT_Complete_Modular.puml = ..\RTOT\uml\RTOT_Complete_Modular.puml
+		..\RTOT\uml\RTOT_Complete_System_SVG.puml = ..\RTOT\uml\RTOT_Complete_System_SVG.puml
+		..\RTOT\uml\RTOT_Compliance_Policy_Engine.puml = ..\RTOT\uml\RTOT_Compliance_Policy_Engine.puml
+		..\RTOT\uml\RTOT_Core_Entities.puml = ..\RTOT\uml\RTOT_Core_Entities.puml
+		..\RTOT\uml\RTOT_Incident_Management.puml = ..\RTOT\uml\RTOT_Incident_Management.puml
+		..\RTOT\uml\RTOT_KPI_Analytics_Management.puml = ..\RTOT\uml\RTOT_KPI_Analytics_Management.puml
+		..\RTOT\uml\RTOT_Logistics_Module.puml = ..\RTOT\uml\RTOT_Logistics_Module.puml
+		..\RTOT\uml\RTOT_Multi_Tenant_Architecture.puml = ..\RTOT\uml\RTOT_Multi_Tenant_Architecture.puml
+		..\RTOT\uml\RTOT_Partner_Company_Management.puml = ..\RTOT\uml\RTOT_Partner_Company_Management.puml
+		..\RTOT\uml\RTOT_Resource_Reservation_Management.puml = ..\RTOT\uml\RTOT_Resource_Reservation_Management.puml
+		..\RTOT\uml\RTOT_Summary.puml = ..\RTOT\uml\RTOT_Summary.puml
+		..\RTOT\uml\RTOT_System_Architecture_Overview.puml = ..\RTOT\uml\RTOT_System_Architecture_Overview.puml
+		..\RTOT\uml\RTOT_Vehicle_Tracking_IoT.puml = ..\RTOT\uml\RTOT_Vehicle_Tracking_IoT.puml
+		..\RTOT\uml\RTOT_Visitor_Management_Module.puml = ..\RTOT\uml\RTOT_Visitor_Management_Module.puml
+		..\RTOT\uml\RTOT_Workplace_Movement_Module.puml = ..\RTOT\uml\RTOT_Workplace_Movement_Module.puml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +36,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E295B1B9-4E70-4BC1-98D9-9CC40FC888FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E295B1B9-4E70-4BC1-98D9-9CC40FC888FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E295B1B9-4E70-4BC1-98D9-9CC40FC888FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E295B1B9-4E70-4BC1-98D9-9CC40FC888FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AED626C5-A6B1-4CB4-984E-1811610313B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AED626C5-A6B1-4CB4-984E-1811610313B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AED626C5-A6B1-4CB4-984E-1811610313B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AED626C5-A6B1-4CB4-984E-1811610313B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B6FD347-76B4-4866-8D4B-7B68347EB435}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B6FD347-76B4-4866-8D4B-7B68347EB435}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B6FD347-76B4-4866-8D4B-7B68347EB435}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B6FD347-76B4-4866-8D4B-7B68347EB435}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

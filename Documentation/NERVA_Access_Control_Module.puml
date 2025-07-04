@@ -1,0 +1,102 @@
+@startuml NERVA_Access_Control_Module
+!define NERVA_ACCESS_CONTROL
+
+title NERVA - Modulo de Controle de Acesso
+
+' ===== PACKAGE STRUCTURE =====
+package "Domain.Common" {
+    abstract class BaseEntity
+    {
+        + Id : GUID <<get>> <<set>>
+        + DomainEvents : IReadOnlyCollection<BaseEvent> <<get>> <<set>>
+        void AddDomainEvent(BaseEvent event) <<add>>
+        void RemoveDomainEvent(BaseEvent event) <<remove>>
+        void ClearDomainEvents() <<clear>>
+    }
+
+    abstract class BaseAuditableEntity 
+    {
+        + CreatedBy : string <<get>> <<set>>
+        + CreatedDate : DateTime <<get>> <<set>>
+        + LastModifiedBy : string? <<get>> <<set>>
+        + LastModifiedDate : DateTime? <<get>> <<set>>
+    }
+
+    abstract class BaseEvent
+    {
+
+    }
+
+    interface INotification
+    {
+
+    }
+
+    BaseEntity o-- BaseAuditableEntity : "inherits"
+}
+
+package "Domain.AccessControl" {
+    class AccessRole 
+    {
+        + Name : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>> = true
+    }
+
+    class Permission 
+    {
+        + Name : string <<get>> <<set>>
+        + Description : string? <<get>> <<set>>
+        + Resource : string <<get>> <<set>>
+        + Action : string <<get>> <<set>>
+    }
+
+    class RolePermission 
+    {
+        + RoleId : GUID <<get>> <<set>>
+        + PermissionId : GUID <<get>> <<set>>
+    }
+
+    class EmployeeRole 
+    {
+        + EmployeeId : int <<get>> <<set>>
+        + RoleId : int <<get>> <<set>>
+        + IsActive : bool <<get>> <<set>> = true
+    }
+
+    class AccessLog {
+        + EmployeeId : int <<get>> <<set>>
+        + Resource : string <<get>> <<set>>
+        + Action : string <<get>> <<set>>
+        + Success : bool <<get>> <<set>>
+        + IpAddress : string? <<get>> <<set>>
+        + UserAgent : string? <<get>> <<set>>
+    }
+    AccessLog --> "AccessDate" DateTime
+    EmployeeRole --> "GrantedDate" DateTime
+    EmployeeRole --> "RevokedDate" DateTime
+}
+
+package "Domain.Employee" {
+    class Employee {
+    }
+}
+
+' ===== INHERITANCE RELATIONSHIPS =====
+BaseEntity <|-- AccessRole
+BaseAuditableEntity <|-- Permission
+BaseAuditableEntity <|-- RolePermission
+BaseAuditableEntity <|-- EmployeeRole
+BaseAuditableEntity <|-- AccessLog
+
+' ===== DOMAIN RELATIONSHIPS =====
+AccessRole ||--o{ RolePermission : "has"
+Permission ||--o{ RolePermission : "granted to"
+AccessRole ||--o{ EmployeeRole : "assigned to"
+EmployeeRole ||--o{ AccessLog : "generates"
+
+' ===== EXTERNAL REFERENCES =====
+note top of EmployeeRole : References Employee.Id\nfrom Employee domain
+note top of AccessLog : References Employee.Id\nfrom Employee domain
+
+@enduml
