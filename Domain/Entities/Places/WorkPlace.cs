@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Entities.Places
 {
@@ -13,5 +14,6 @@ namespace Domain.Entities.Places
         public string Building { get; set; } = string.Empty;
         public int MaxCampacity { get; set; } = 0;  
         public bool IsActive { get; set; } = true;
+        public WorkPlaceType WorkPlaceType = WorkPlaceType.Office;
     }
 }
