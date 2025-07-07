@@ -18,7 +18,7 @@ namespace Domain.Entities.Access
             ValidateString(Action, 1, 1000, nameof(Action), "Action cannot be null or empty and must not exceed 1000 characters.");
             ValidateString(IpAddress, 7, 45, nameof(IpAddress), "IpAddress must be a valid IP address and cannot exceed 45 characters.");
             if (Employee == null)
-                throw new ArgumentNullException(nameof(Employee), "Employee cannot be null.");
+                throw new ArgumentException(nameof(Employee), "Employee cannot be null.");
             if (EmployeeId == Guid.Empty)
                 throw new ArgumentException("EmployeeId must be a valid GUID.", nameof(EmployeeId));
             if (Timestamp == default)
