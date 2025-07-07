@@ -4,7 +4,7 @@ namespace Domain.Common
 {
     public abstract class BaseEntity
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         private readonly List<BaseEvent> _domainEvents = new();
 
@@ -57,4 +57,5 @@ namespace Domain.Common
             if (obj == null)
                 throw new ArgumentNullException(paramName, customMessage ?? $"{paramName} cannot be null.");
         }
+    }
 }
