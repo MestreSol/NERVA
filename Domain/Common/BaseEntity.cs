@@ -56,6 +56,12 @@ namespace Domain.Common
         {
             if (obj == null)
                 throw new ArgumentNullException(paramName, customMessage ?? $"{paramName} cannot be null.");
+
+            if (obj is not BaseEntity baseEntity)
+                throw new ArgumentException(customMessage ?? $"{paramName} deve herdar de BaseEntity ou BaseAuditableEntity.", paramName);
+
+            if (baseEntity.Id == Guid.Empty)
+                throw new ArgumentException(customMessage ?? $"{paramName}.Id deve ser um GUID válido.", paramName);
         }
     }
 }
