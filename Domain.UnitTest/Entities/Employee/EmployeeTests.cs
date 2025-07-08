@@ -7,16 +7,13 @@ namespace Domain.UnitTest.Entities.Employee
     {
         private JobPosition GetValidJobPosition()
         {
-            return new JobPosition
-            {
-                Id = Guid.NewGuid(),
-                Title = "Desenvolvedor",
-                Abreviation = "DEV",
-                MaximumSalary = 15000,
-                MinimumSalary = 5000,
-                IsActive = true,
-                AllocationRecomendation = 1
-            };
+            return new JobPosition(
+                    title: "Analista",
+                    abreviation: "ANL",
+                    maximumSalary: 10000,
+                    minimumSalary: 5000,
+                    allocationRecomendation: 1
+                );
         }
 
         private Departament GetValidDepartament()

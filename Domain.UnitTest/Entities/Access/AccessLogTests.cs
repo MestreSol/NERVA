@@ -14,15 +14,15 @@ namespace Domain.UnitTest.Entities.Access
                 email: "joao@empresa.com",
                 phoneNumber: "11999999999",
                 dateOfBirth: new DateTime(1990, 1, 1),
-                position: new JobPosition
+                position: new JobPosition(
+                    title: "Analista",
+                    abreviation: "ANL",
+                    maximumSalary: 10000,
+                    minimumSalary: 5000,
+                    allocationRecomendation: 1
+                )
                 {
-                    Id = Guid.NewGuid(),
-                    Title = "Analista",
-                    Abreviation = "ANL",
-                    MaximumSalary = 10000,
-                    MinimumSalary = 5000,
-                    IsActive = true,
-                    AllocationRecomendation = 1
+                    IsActive = true
                 },
                 type: EmployeeType.FullTime,
                 salary: 7000,

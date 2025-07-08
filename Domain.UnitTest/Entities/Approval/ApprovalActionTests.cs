@@ -49,14 +49,13 @@ namespace Domain.UnitTest.Entities.Approval
 
         private Domain.Entities.Employee.Employee GetValidEmployee()
         {
-            var position = new JobPosition
-            {
-                Id = Guid.NewGuid(),
-                Title = "Analista",
-                Abreviation = "ANL",
-                IsActive = true,
-                AllocationRecomendation = 1
-            };
+            var position = new JobPosition(
+                    title: "Analista",
+                    abreviation: "ANL",
+                    maximumSalary: 10000,
+                    minimumSalary: 5000,
+                    allocationRecomendation: 1
+                );
 
             var departament = new Departament("TI", "TI", "Tecnologia da Informação");
 

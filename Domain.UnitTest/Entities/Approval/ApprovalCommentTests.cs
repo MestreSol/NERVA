@@ -14,16 +14,13 @@ namespace Domain.UnitTest.Entities.Approval
                 email: "maria@empresa.com",
                 phoneNumber: "11988887777",
                 dateOfBirth: new DateTime(1985, 5, 20),
-                position: new JobPosition
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Gerente",
-                    Abreviation = "GR",
-                    MaximumSalary = 20000,
-                    MinimumSalary = 10000,
-                    IsActive = true,
-                    AllocationRecomendation = 2
-                },
+                position: new JobPosition(
+                    title: "Analista",
+                    abreviation: "ANL",
+                    maximumSalary: 10000,
+                    minimumSalary: 5000,
+                    allocationRecomendation: 1
+                ),
                 type: EmployeeType.FullTime,
                 salary: 15000,
                 status: EmployeeStatus.Active,
