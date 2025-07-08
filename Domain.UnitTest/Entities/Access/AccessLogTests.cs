@@ -6,9 +6,9 @@ namespace Domain.UnitTest.Entities.Access
 {
     public class AccessLogTests
     {
-        private Employee GetValidEmployee()
+        private Domain.Entities.Employee.Employee GetValidEmployee()
         {
-            return new Employee
+            return new Domain.Entities.Employee.Employee
             {
                 Id = Guid.NewGuid(),
                 FirstName = "João",
@@ -31,14 +31,11 @@ namespace Domain.UnitTest.Entities.Access
                 Salary = 7000,
                 IsActive = true,
                 Status = EmployeeStatus.Active,
-                Departament = new Departament
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "TI",
-                    Abreviation = "TI",
-                    Description = "Tecnologia da Informação",
-                    IsActive = true
-                }
+                Departament = new Departament(
+                    name: "TI",
+                    abreviation: "TI",
+                    description: "Tecnologia da Informação"
+                )
             };
         }
         [Fact]
