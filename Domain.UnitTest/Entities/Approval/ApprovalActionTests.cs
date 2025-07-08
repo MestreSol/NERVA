@@ -8,24 +8,24 @@ namespace Domain.UnitTest.Entities.Approval
     {
         private ApprovalRequest GetValidRequest()
         {
-            return new ApprovalRequest
+            var workflow = new ApprovalWorkflow
             {
                 Id = Guid.NewGuid(),
-                WorkflowId = Guid.NewGuid(),
-                Workflow = new ApprovalWorkflow
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Workflow",
-                    Description = "Descrição",
-                    EntityType = "Tipo",
-                    IsActive = true
-                },
-                RequesterId = Guid.NewGuid(),
-                Requester = GetValidEmployee(),
+                Name = "Workflow",
+                Description = "Descrição",
+                EntityType = "Tipo",
+                IsActive = true
+            };
+
+            var requester = GetValidEmployee();
+
+            return new ApprovalRequest(workflow, requester, "Detalhes", RequestCriticality.Normal)
+            {
+                Id = Guid.NewGuid(),
+                WorkflowId = workflow.Id,
+                RequesterId = requester.Id,
                 RequestDate = DateTime.UtcNow,
-                RequestDetails = "Detalhes",
                 CurrentStep = 1,
-                Criticality = RequestCriticality.Normal,
                 Status = ApprovalStatus.Pending,
                 Steps = new List<ApprovalStep>(),
                 Comments = new List<ApprovalComment>()
