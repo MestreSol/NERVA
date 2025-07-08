@@ -6,9 +6,9 @@ namespace Domain.UnitTest.Entities.Approval
 {
     public class ApprovalCommentTests
     {
-        private Employee GetValidEmployee()
+        private Domain.Entities.Employee.Employee GetValidEmployee()
         {
-            return new Employee
+            return new Domain.Entities.Employee.Employee
             {
                 Id = Guid.NewGuid(),
                 FirstName = "Maria",
@@ -31,14 +31,8 @@ namespace Domain.UnitTest.Entities.Approval
                 Salary = 15000,
                 IsActive = true,
                 Status = EmployeeStatus.Active,
-                Departament = new Departament
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "RH",
-                    Abreviation = "RH",
-                    Description = "Recursos Humanos",
-                    IsActive = true
-                }
+                Departament = new Departament("RH", "RH", "Recursos Humanos")
+                
             };
         }
 

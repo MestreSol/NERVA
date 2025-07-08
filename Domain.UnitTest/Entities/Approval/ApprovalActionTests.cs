@@ -47,9 +47,9 @@ namespace Domain.UnitTest.Entities.Approval
             };
         }
 
-        private Employee GetValidEmployee()
+        private Domain.Entities.Employee.Employee GetValidEmployee()
         {
-            return new Employee
+            return new Domain.Entities.Employee.Employee
             {
                 Id = Guid.NewGuid(),
                 FirstName = "João",
@@ -68,14 +68,7 @@ namespace Domain.UnitTest.Entities.Approval
                 },
                 Type = EmployeeType.FullTime,
                 IsActive = true,
-                Departament = new Departament
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "TI",
-                    Abreviation = "TI",
-                    Description = "Tecnologia da Informação",
-                    IsActive = true
-                }
+                Departament = new Departament("TI", "TI", "Tecnologia da Informação")
             };
         }
 
