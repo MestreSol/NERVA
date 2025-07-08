@@ -8,12 +8,13 @@ namespace Domain.UnitTest.Entities.Approval
     {
         private ApprovalWorkflow GetValidWorkflow()
         {
-            return new ApprovalWorkflow
+            return new ApprovalWorkflow(
+                name: "Workflow Teste",
+                description: "Descrição do workflow",
+                entityType: "Tipo"
+            )
             {
                 Id = Guid.NewGuid(),
-                Name = "Workflow Teste",
-                Description = "Descrição do workflow",
-                EntityType = "Tipo",
                 IsActive = true
             };
         }

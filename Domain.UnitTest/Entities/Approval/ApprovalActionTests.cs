@@ -8,12 +8,9 @@ namespace Domain.UnitTest.Entities.Approval
     {
         private ApprovalRequest GetValidRequest()
         {
-            var workflow = new ApprovalWorkflow
+            ApprovalWorkflow workflow = new ApprovalWorkflow("Workflow", "Descrição", "Tipo")
             {
                 Id = Guid.NewGuid(),
-                Name = "Workflow",
-                Description = "Descrição",
-                EntityType = "Tipo",
                 IsActive = true
             };
 
@@ -34,21 +31,17 @@ namespace Domain.UnitTest.Entities.Approval
 
         private ApprovalStep GetValidStep()
         {
-            return new ApprovalStep
+            var workflow = new ApprovalWorkflow("Workflow", "Descrição", "Tipo")
             {
                 Id = Guid.NewGuid(),
-                WorkflowId = Guid.NewGuid(),
-                Workflow = new ApprovalWorkflow
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Workflow",
-                    Description = "Descrição",
-                    EntityType = "Tipo",
-                    IsActive = true
-                },
-                StepOrder = 1,
-                Name = "Aprovação",
-                RequiredApprovals = 1,
+                IsActive = true
+            };
+
+            return new ApprovalStep(workflow, 1, "Aprovação", 1)
+            {
+                Id = Guid.NewGuid(),
+                WorkflowId = workflow.Id,
+                Workflow = workflow,
                 IsActive = true,
                 ApproveGroups = new List<ApproveGroup>()
             };
