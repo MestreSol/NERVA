@@ -46,7 +46,7 @@ namespace Domain.Entities.Approval
                 throw new ArgumentException("Action date must be a valid date.", nameof(actionDate));
 
             ValidateString(actionDetails, 1, 1000, nameof(actionDetails), "Action details cannot be null or empty and must not exceed 1000 characters.");
-            ValidateString(rejectionReason, 0, 500, nameof(rejectionReason), "Rejection reason must not exceed 500 characters.");
+            ValidateString(rejectionReason, 1, 500, nameof(rejectionReason), "Rejection reason must not exceed 500 characters.");
         }
     }
 }
