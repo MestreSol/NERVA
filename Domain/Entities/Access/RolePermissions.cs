@@ -16,15 +16,15 @@ namespace Domain.Entities.Access
 
         public RolePermissions(Permissions permissions, AccessRole role)
         {
+            Validate(permissions, role);
             Permissions = permissions;
             Role = role;
-            Validate();
             RoleId = role.Id;
             PermissionsId = permissions.Id;
             IsActive = true;
         }
 
-        public void Validate()
+        public void Validate(Permissions Permissions, AccessRole Role)
         {
             ValidateObject(Permissions, nameof(Permissions), "Permissions cannot be null.");
             ValidateObject(Role, nameof(Role), "Role cannot be null.");

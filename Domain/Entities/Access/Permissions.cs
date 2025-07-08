@@ -8,7 +8,7 @@ namespace Domain.Entities.Access
 
         public List<Localization> Localizations { get; set; }
 
-        public List<Function> Functions{ get; set; }
+        public List<Function> Functions { get; set; }
 
 
         public Permissions(string description,
@@ -16,19 +16,19 @@ namespace Domain.Entities.Access
                            List<Function> functionsCanAccess
                            )
         {
+            Validate(description, localizationsCanAccess, functionsCanAccess);
             Description = description;
             Localizations = localizationsCanAccess;
             Functions = functionsCanAccess;
-            Validate(); 
         }
 
-        public void Validate()
+        public void Validate(string Description, List<Localization> Localizations, List<Function> Functions)
         {
             ValidateString(Description, 1, 500, nameof(Description), "Description must be a non-empty string with a maximum length of 500 characters.");
             ValidateList(Localizations, nameof(Localizations));
             ValidateList(Functions, nameof(Functions));
         }
 
-       
+
     }
 }
