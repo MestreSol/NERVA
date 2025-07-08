@@ -1,4 +1,5 @@
 using Domain.Entities.Employee;
+using Domain.Enums;
 using System;
 using Xunit;
 
@@ -8,32 +9,27 @@ namespace Domain.UnitTest.Entities.Employee
     {
         private Domain.Entities.Employee.Employee GetValidEmployee()
         {
-            return new Domain.Entities.Employee.Employee
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "Ana",
-                LastName = "Souza",
-                Email = "ana@empresa.com",
-                PhoneNumber = "11999999999",
-                DateOfBirth = new DateTime(1992, 2, 2),
-                PositionID = Guid.NewGuid(),
-                Position = new JobPosition
+            return new Domain.Entities.Employee.Employee(
+                firstName: "Maria",
+                lastName: "Oliveira",
+                email: "maria@empresa.com",
+                phoneNumber: "11988887777",
+                dateOfBirth: new DateTime(1985, 5, 20),
+                position: new JobPosition
                 {
                     Id = Guid.NewGuid(),
-                    Title = "Analista",
-                    Abreviation = "ANL",
-                    MaximumSalary = 12000,
-                    MinimumSalary = 4000,
+                    Title = "Gerente",
+                    Abreviation = "GR",
+                    MaximumSalary = 20000,
+                    MinimumSalary = 10000,
                     IsActive = true,
-                    AllocationRecomendation = 1
+                    AllocationRecomendation = 2
                 },
-                Type = Enums.EmployeeType.FullTime,
-                Salary = 6000,
-                IsActive = true,
-                Status = Enums.EmployeeStatus.Active,
-                Departament = new Departament("RH", "RH", "Recursos Humanos")
-               
-            };
+                type: EmployeeType.FullTime,
+                salary: 15000,
+                status: EmployeeStatus.Active,
+                departament: new Departament("RH", "RH", "Recursos Humanos")
+            );
         }
 
         private Contract GetValidContract(Domain.Entities.Employee.Employee employee)

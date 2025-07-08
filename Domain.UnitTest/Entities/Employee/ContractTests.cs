@@ -1,4 +1,5 @@
 using Domain.Entities.Employee;
+using Domain.Enums;
 
 namespace Domain.UnitTest.Entities.Employee
 {
@@ -6,32 +7,27 @@ namespace Domain.UnitTest.Entities.Employee
     {
         private Domain.Entities.Employee.Employee GetValidEmployee()
         {
-            return new Domain.Entities.Employee.Employee
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "Carlos",
-                LastName = "Santos",
-                Email = "carlos@empresa.com",
-                PhoneNumber = "11999999999",
-                DateOfBirth = new DateTime(1990, 1, 1),
-                PositionID = Guid.NewGuid(),
-                Position = new JobPosition
+            return new Domain.Entities.Employee.Employee(
+                firstName: "Maria",
+                lastName: "Oliveira",
+                email: "maria@empresa.com",
+                phoneNumber: "11988887777",
+                dateOfBirth: new DateTime(1985, 5, 20),
+                position: new JobPosition
                 {
                     Id = Guid.NewGuid(),
-                    Title = "Desenvolvedor",
-                    Abreviation = "DEV",
-                    MaximumSalary = 15000,
-                    MinimumSalary = 5000,
+                    Title = "Gerente",
+                    Abreviation = "GR",
+                    MaximumSalary = 20000,
+                    MinimumSalary = 10000,
                     IsActive = true,
-                    AllocationRecomendation = 1
+                    AllocationRecomendation = 2
                 },
-                Type = Domain.Enums.EmployeeType.FullTime,
-                Salary = 8000,
-                IsActive = true,
-                Status = Enums.EmployeeStatus.Active,
-                Departament = new Departament("TI", "TI", "Tecnologia da Informação")
-                
-            };
+                type: EmployeeType.FullTime,
+                salary: 15000,
+                status: EmployeeStatus.Active,
+                departament: new Departament("RH", "RH", "Recursos Humanos")
+            );
         }
 
         [Fact]

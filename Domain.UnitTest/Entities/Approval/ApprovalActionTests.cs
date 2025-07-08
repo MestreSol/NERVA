@@ -49,27 +49,29 @@ namespace Domain.UnitTest.Entities.Approval
 
         private Domain.Entities.Employee.Employee GetValidEmployee()
         {
-            return new Domain.Entities.Employee.Employee
+            var position = new JobPosition
             {
                 Id = Guid.NewGuid(),
-                FirstName = "João",
-                LastName = "Silva",
-                Email = "joao@empresa.com",
-                PhoneNumber = "11999999999",
-                DateOfBirth = new DateTime(1990, 1, 1),
-                PositionID = Guid.NewGuid(),
-                Position = new JobPosition
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Analista",
-                    Abreviation = "ANL",
-                    IsActive = true,
-                    AllocationRecomendation = 1
-                },
-                Type = EmployeeType.FullTime,
+                Title = "Analista",
+                Abreviation = "ANL",
                 IsActive = true,
-                Departament = new Departament("TI", "TI", "Tecnologia da Informação")
+                AllocationRecomendation = 1
             };
+
+            var departament = new Departament("TI", "TI", "Tecnologia da Informação");
+
+            return new Domain.Entities.Employee.Employee(
+                firstName: "João",
+                lastName: "Silva",
+                email: "joao@empresa.com",
+                phoneNumber: "11999999999",
+                dateOfBirth: new DateTime(1990, 1, 1),
+                position: position,
+                type: EmployeeType.FullTime,
+                salary: 5000m,
+                status: EmployeeStatus.Active,
+                departament: departament
+            );
         }
 
         [Fact]

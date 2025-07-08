@@ -8,16 +8,13 @@ namespace Domain.UnitTest.Entities.Approval
     {
         private Domain.Entities.Employee.Employee GetValidEmployee()
         {
-            return new Domain.Entities.Employee.Employee
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "Maria",
-                LastName = "Oliveira",
-                Email = "maria@empresa.com",
-                PhoneNumber = "11988887777",
-                DateOfBirth = new DateTime(1985, 5, 20),
-                PositionID = Guid.NewGuid(),
-                Position = new JobPosition
+            return new Domain.Entities.Employee.Employee(
+                firstName: "Maria",
+                lastName: "Oliveira",
+                email: "maria@empresa.com",
+                phoneNumber: "11988887777",
+                dateOfBirth: new DateTime(1985, 5, 20),
+                position: new JobPosition
                 {
                     Id = Guid.NewGuid(),
                     Title = "Gerente",
@@ -27,13 +24,11 @@ namespace Domain.UnitTest.Entities.Approval
                     IsActive = true,
                     AllocationRecomendation = 2
                 },
-                Type = EmployeeType.FullTime,
-                Salary = 15000,
-                IsActive = true,
-                Status = EmployeeStatus.Active,
-                Departament = new Departament("RH", "RH", "Recursos Humanos")
-                
-            };
+                type: EmployeeType.FullTime,
+                salary: 15000,
+                status: EmployeeStatus.Active,
+                departament: new Departament("RH", "RH", "Recursos Humanos")
+            );
         }
 
         [Fact]

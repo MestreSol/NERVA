@@ -8,16 +8,13 @@ namespace Domain.UnitTest.Entities.Access
     {
         private Domain.Entities.Employee.Employee GetValidEmployee()
         {
-            return new Domain.Entities.Employee.Employee
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "João",
-                LastName = "Silva",
-                Email = "joao@empresa.com",
-                PhoneNumber = "11999999999",
-                DateOfBirth = new DateTime(1990, 1, 1),
-                PositionID = Guid.NewGuid(),
-                Position = new JobPosition
+            return new Domain.Entities.Employee.Employee(
+                firstName: "João",
+                lastName: "Silva",
+                email: "joao@empresa.com",
+                phoneNumber: "11999999999",
+                dateOfBirth: new DateTime(1990, 1, 1),
+                position: new JobPosition
                 {
                     Id = Guid.NewGuid(),
                     Title = "Analista",
@@ -27,16 +24,15 @@ namespace Domain.UnitTest.Entities.Access
                     IsActive = true,
                     AllocationRecomendation = 1
                 },
-                Type = EmployeeType.FullTime,
-                Salary = 7000,
-                IsActive = true,
-                Status = EmployeeStatus.Active,
-                Departament = new Departament(
+                type: EmployeeType.FullTime,
+                salary: 7000,
+                status: EmployeeStatus.Active,
+                departament: new Departament(
                     name: "TI",
                     abreviation: "TI",
                     description: "Tecnologia da Informação"
                 )
-            };
+            );
         }
         [Fact]
         public void Constructor_ValidParameters_ShouldCreateAccessLog()

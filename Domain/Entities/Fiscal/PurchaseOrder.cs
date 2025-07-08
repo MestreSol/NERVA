@@ -11,7 +11,7 @@ namespace Domain.Entities.Fiscal
         public string SupplierId { get; set; } = string.Empty;
         public UnitOfMeasure UnitOfMeasure { get; set; } = UnitOfMeasure.Kilogram;
         public PurchaseOrderStatus Status { get; set; } = PurchaseOrderStatus.Draft;
-        public Employee.Employee PurchasedBy { get; set; } = new Employee.Employee();
+        public Employee.Employee PurchasedBy { get; set; } 
         public Guid PurchasedById { get; set; } = Guid.Empty;
     }
 }
