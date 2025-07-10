@@ -13,7 +13,7 @@ namespace Domain.Entities.Product
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal Price { get; set; } = 0.0m;
-        public ProductCategory ProductCategory { get; set; } = new();
+        public ProductCategory ProductCategory { get; set; }
         public bool IsActive { get; set; } = true;
 
         public Product(string code, string name, string description, decimal price, ProductCategory productCategory)
